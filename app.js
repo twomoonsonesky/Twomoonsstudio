@@ -6,6 +6,9 @@ let currentOrientation = 'landscape';
 let isEditMode = false;
 let isCottageZoomed = false;
 
+// Night/day state (single source of truth for lights)
+let isNightNow = false;
+
 let layoutLandscape = {
     'cottage-small': { left: 20, top: 40, width: 20 },
     'cottage-zoomed': { left: 10, top: 10, width: 80 },
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     initChat();
     initApp();
     initStorageTest();
-    
+
     window.addEventListener('resize', handleOrientationChange);
 });
 
@@ -72,15 +75,15 @@ function applyLayout() {
     const container = document.getElementById('landing-container');
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    
+
     Object.keys(layout).forEach(id => {
         const element = document.getElementById(id);
         if (!element) return;
-        
+
         const config = layout[id];
         const left = (config.left / 100) * containerWidth;
         const top = (config.top / 100) * containerHeight;
-        
+
         if (config.size !== undefined) {
             const size = Math.min(
                 (config.size / 100) * containerWidth,
@@ -93,28 +96,48 @@ function applyLayout() {
             element.style.width = `${width}px`;
             element.style.height = 'auto';
         }
-        
+
         element.style.left = `${left}px`;
         element.style.top = `${top}px`;
     });
-    
-    syncLights('cottage-small');
+
+    // Keep lights aligned to whichever cottage view is "current"
+    syncLights(isCottageZoomed ? 'cottage-zoomed' : 'cottage-small');
+
+    // Ensure lights visibility matches current day/night
+    updateLightsVisibility();
 }
 
 function syncLights(cottageId) {
     const cottage = document.getElementById(cottageId);
     const lights = document.getElementById('lights');
     if (!cottage || !lights) return;
-    
+
     lights.style.left = cottage.style.left;
     lights.style.top = cottage.style.top;
     lights.style.width = cottage.style.width;
     lights.style.height = cottage.style.height;
 }
 
+// A helper that repositions lights without any "lag" feeling from transitions.
+// (Even if CSS still has "transition: all ...", this reduces the slide effect.)
+function syncLightsInstant(cottageId) {
+    const lights = document.getElementById('lights');
+    if (!lights) return;
+
+    const previousTransition = lights.style.transition;
+    lights.style.transition = 'none';
+    syncLights(cottageId);
+
+    // force reflow so the browser applies the position immediately
+    void lights.offsetHeight;
+
+    lights.style.transition = previousTransition;
+}
+
 function initEditMode() {
     const editBtn = document.getElementById('editModeBtn');
-    
+
     editBtn.addEventListener('click', function() {
         isEditMode = !isEditMode;
         if (isEditMode) {
@@ -129,12 +152,12 @@ function enterEditMode() {
     const editBtn = document.getElementById('editModeBtn');
     const grid = document.getElementById('grid-overlay');
     const layoutInfo = document.getElementById('layoutInfo');
-    
+
     editBtn.classList.add('active');
     editBtn.textContent = 'Editing...';
     grid.classList.remove('hidden');
     layoutInfo.classList.remove('hidden');
-    
+
     updateLayoutInfo();
     makeElementsEditable();
 }
@@ -143,21 +166,21 @@ function exitEditMode() {
     const editBtn = document.getElementById('editModeBtn');
     const grid = document.getElementById('grid-overlay');
     const layoutInfo = document.getElementById('layoutInfo');
-    
+
     editBtn.classList.remove('active');
     editBtn.textContent = 'Edit Layout';
     grid.classList.add('hidden');
     layoutInfo.classList.add('hidden');
-    
+
     removeEditListeners();
 }
 
 function makeElementsEditable() {
     const editables = document.querySelectorAll('.editable-element');
-    
+
     editables.forEach(element => {
         const view = element.dataset.editView;
-        
+
         if (view === 'zoomed' && !isCottageZoomed) {
             element.classList.remove('edit-mode');
             return;
@@ -166,13 +189,13 @@ function makeElementsEditable() {
             element.classList.remove('edit-mode');
             return;
         }
-        
+
         element.classList.add('edit-mode');
-        
+
         element.removeEventListener('touchstart', onDragStart);
         element.removeEventListener('touchmove', onDragMove);
         element.removeEventListener('touchend', onDragEnd);
-        
+
         element.addEventListener('touchstart', onDragStart);
         element.addEventListener('touchmove', onDragMove);
         element.addEventListener('touchend', onDragEnd);
@@ -191,28 +214,28 @@ function removeEditListeners() {
 
 function onDragStart(e) {
     if (!isEditMode) return;
-    
+
     if (e.touches.length === 1) {
         e.preventDefault();
         dragElement = e.target.closest('.editable-element');
-        
+
         const touch = e.touches[0];
         const rect = dragElement.getBoundingClientRect();
-        
+
         dragOffsetX = touch.clientX - rect.left;
         dragOffsetY = touch.clientY - rect.top;
-        
+
     } else if (e.touches.length === 2) {
         e.preventDefault();
         resizeElement = e.target.closest('.editable-element');
-        
+
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         initialDistance = Math.hypot(
             touch2.clientX - touch1.clientX,
             touch2.clientY - touch1.clientY
         );
-        
+
         const rect = resizeElement.getBoundingClientRect();
         initialSize = rect.width;
     }
@@ -220,62 +243,62 @@ function onDragStart(e) {
 
 function onDragMove(e) {
     if (!isEditMode) return;
-    
+
     if (dragElement && e.touches.length === 1) {
         e.preventDefault();
-        
+
         const touch = e.touches[0];
         const container = document.getElementById('landing-container');
         const containerRect = container.getBoundingClientRect();
-        
+
         let newLeft = touch.clientX - containerRect.left - dragOffsetX;
         let newTop = touch.clientY - containerRect.top - dragOffsetY;
-        
+
         const elementWidth = dragElement.offsetWidth;
         const elementHeight = dragElement.offsetHeight;
-        
+
         newLeft = Math.max(0, Math.min(containerRect.width - elementWidth, newLeft));
         newTop = Math.max(0, Math.min(containerRect.height - elementHeight, newTop));
-        
+
         dragElement.style.left = `${newLeft}px`;
         dragElement.style.top = `${newTop}px`;
-        
+
         if (dragElement.id === 'cottage-small' || dragElement.id === 'cottage-zoomed') {
             const lights = document.getElementById('lights');
-            lights.style.transition = 'none';
+            if (lights) lights.style.transition = 'none';
             syncLights(dragElement.id);
         }
-        
+
         updateLayoutInfo();
-        
+
     } else if (resizeElement && e.touches.length === 2) {
         e.preventDefault();
-        
+
         const touch1 = e.touches[0];
         const touch2 = e.touches[1];
         const currentDistance = Math.hypot(
             touch2.clientX - touch1.clientX,
             touch2.clientY - touch1.clientY
         );
-        
+
         const scale = currentDistance / initialDistance;
         let newSize = initialSize * scale;
-        
+
         const container = document.getElementById('landing-container');
         newSize = Math.max(50, Math.min(container.clientWidth * 0.95, newSize));
-        
+
         resizeElement.style.width = `${newSize}px`;
-        
+
         if (resizeElement.classList.contains('orb-element')) {
             resizeElement.style.height = `${newSize}px`;
         } else {
             resizeElement.style.height = 'auto';
         }
-        
+
         if (resizeElement.id === 'cottage-small' || resizeElement.id === 'cottage-zoomed') {
             syncLights(resizeElement.id);
         }
-        
+
         updateLayoutInfo();
     }
 }
@@ -283,17 +306,17 @@ function onDragMove(e) {
 function onDragEnd(e) {
     if (dragElement) {
         saveElementPosition(dragElement);
-        
+
         const lights = document.getElementById('lights');
         if (lights) {
             setTimeout(() => {
                 lights.style.transition = '';
             }, 50);
         }
-        
+
         dragElement = null;
     }
-    
+
     if (resizeElement) {
         saveElementPosition(resizeElement);
         resizeElement = null;
@@ -305,14 +328,14 @@ function saveElementPosition(element) {
     const container = document.getElementById('landing-container');
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
-    
+
     const rect = element.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
-    
+
     const left = ((rect.left - containerRect.left) / containerWidth) * 100;
     const top = ((rect.top - containerRect.top) / containerHeight) * 100;
     const width = (rect.width / containerWidth) * 100;
-    
+
     if (element.classList.contains('orb-element')) {
         layout[element.id] = { left, top, size: width };
     } else {
@@ -327,9 +350,9 @@ function updateLayoutInfo() {
     const orientationName = currentOrientation === 'landscape' ? 'Landscape' : 'Portrait';
     const viewIcon = isCottageZoomed ? '🔍' : '🏠';
     const viewName = isCottageZoomed ? 'Zoomed' : 'Normal';
-    
+
     const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
-    
+
     let html = `
         <div style="text-align: center; margin-bottom: 15px;">
             <strong style="font-size: 16px;">Visual Editor</strong><br>
@@ -338,20 +361,20 @@ function updateLayoutInfo() {
             </div>
             <em style="font-size: 12px;">Drag to move • Pinch to resize</em>
         </div>
-        
+
         <div style="display: flex; gap: 8px; margin-bottom: 15px;">
             <button onclick="saveLayout()" style="flex: 1; padding: 12px; background: rgba(100, 200, 100, 0.9); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;">💾 Save</button>
             <button onclick="closeWithoutSaving()" style="flex: 1; padding: 12px; background: rgba(150, 150, 150, 0.9); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;">✕ Close</button>
         </div>
-        
+
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
     `;
-    
+
     currentViewElements.forEach(el => {
         const name = el.dataset.editName || el.id;
         const icon = el.dataset.editIcon || '📦';
         const config = layout[el.id];
-        
+
         if (config) {
             html += `<strong>${icon} ${name}</strong><br>`;
             html += `Position: ${config.left.toFixed(1)}%, ${config.top.toFixed(1)}%<br>`;
@@ -362,9 +385,9 @@ function updateLayoutInfo() {
             }
         }
     });
-    
+
     html += `</div>`;
-    
+
     layoutInfo.querySelector('.layout-info-content').innerHTML = html;
 }
 
@@ -391,50 +414,66 @@ function closeWithoutSaving() {
 
 window.closeWithoutSaving = closeWithoutSaving;
 
+function updateLightsVisibility() {
+    const lights = document.getElementById('lights');
+    if (!lights) return;
+
+    // Lights should ONLY depend on time-of-day (not zoom state).
+    if (isNightNow) lights.classList.add('active');
+    else lights.classList.remove('active');
+}
+
 function zoomCottage() {
     const cottageSmall = document.getElementById('cottage-small');
     const cottageZoomed = document.getElementById('cottage-zoomed');
-    const lights = document.getElementById('lights');
     const background = document.getElementById('background');
     const orb = document.getElementById('solena-orb');
-    
+
     if (!cottageSmall || !cottageZoomed) return;
-    
+
+    // Mark zoomed *early* so anything else that checks state behaves consistently
+    isCottageZoomed = true;
+
+    // Ensure lights are aligned instantly before movement begins
+    syncLightsInstant('cottage-small');
+    updateLightsVisibility();
+
     const smallRect = cottageSmall.getBoundingClientRect();
     const layout = getCurrentLayout();
     const zoomedConfig = layout['cottage-zoomed'];
     const container = document.getElementById('landing-container');
-    
+
     const targetLeft = (zoomedConfig.left / 100) * container.clientWidth;
     const targetTop = (zoomedConfig.top / 100) * container.clientHeight;
     const targetWidth = (zoomedConfig.width / 100) * container.clientWidth;
-    
+
     cottageZoomed.style.left = `${smallRect.left - container.getBoundingClientRect().left}px`;
     cottageZoomed.style.top = `${smallRect.top - container.getBoundingClientRect().top}px`;
     cottageZoomed.style.width = `${smallRect.width}px`;
-    
+
     cottageZoomed.classList.remove('hidden');
     cottageZoomed.classList.add('zooming');
-    
+
     background.classList.add('faded');
     if (orb) orb.classList.add('faded');
-    
+
     setTimeout(() => {
         cottageZoomed.style.left = `${targetLeft}px`;
         cottageZoomed.style.top = `${targetTop}px`;
         cottageZoomed.style.width = `${targetWidth}px`;
-        
+
+        // Keep lights locked to the zoomed cottage *without forcing them on*
         setTimeout(() => {
-            syncLights('cottage-zoomed');
-            lights.classList.add('active');
-        }, 100);
+            syncLightsInstant('cottage-zoomed');
+            updateLightsVisibility();
+        }, 60);
+
     }, 50);
-    
+
     setTimeout(() => {
         cottageZoomed.classList.remove('zooming');
         cottageZoomed.classList.add('active');
-        isCottageZoomed = true;
-        
+
         if (isEditMode) {
             removeEditListeners();
             makeElementsEditable();
@@ -445,37 +484,42 @@ function zoomCottage() {
 
 function unzoomCottage() {
     const cottageZoomed = document.getElementById('cottage-zoomed');
-    const lights = document.getElementById('lights');
     const background = document.getElementById('background');
     const orb = document.getElementById('solena-orb');
-    
+
     if (!cottageZoomed) return;
-    
+
     cottageZoomed.classList.remove('active');
     cottageZoomed.classList.add('zooming');
-    
+
     background.classList.remove('faded');
     if (orb) orb.classList.remove('faded');
-    
+
     const layout = getCurrentLayout();
     const smallConfig = layout['cottage-small'];
     const container = document.getElementById('landing-container');
-    
+
     const targetLeft = (smallConfig.left / 100) * container.clientWidth;
     const targetTop = (smallConfig.top / 100) * container.clientHeight;
     const targetWidth = (smallConfig.width / 100) * container.clientWidth;
-    
+
     cottageZoomed.style.left = `${targetLeft}px`;
     cottageZoomed.style.top = `${targetTop}px`;
     cottageZoomed.style.width = `${targetWidth}px`;
-    
+
+    // Keep lights aligned while unzooming
+    syncLightsInstant('cottage-zoomed');
+    updateLightsVisibility();
+
     setTimeout(() => {
         cottageZoomed.classList.remove('zooming');
         cottageZoomed.classList.add('hidden');
-        syncLights('cottage-small');
-        
+
+        // Now we're back to the small cottage view
         isCottageZoomed = false;
-        
+        syncLightsInstant('cottage-small');
+        updateLightsVisibility();
+
         if (isEditMode) {
             removeEditListeners();
             makeElementsEditable();
@@ -490,24 +534,24 @@ function initChat() {
     const sendBtn = document.getElementById('send-btn');
     const chatInput = document.getElementById('chat-input');
     const voiceBtn = document.getElementById('voice-input-btn');
-    
+
     closeBtn.addEventListener('click', function() {
         chatOverlay.classList.remove('active');
         setTimeout(() => chatOverlay.classList.add('hidden'), 300);
     });
-    
+
     chatOverlay.addEventListener('click', function(e) {
         if (e.target === chatOverlay) {
             chatOverlay.classList.remove('active');
             setTimeout(() => chatOverlay.classList.add('hidden'), 300);
         }
     });
-    
+
     sendBtn.addEventListener('click', sendMessage);
     chatInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
     });
-    
+
     voiceBtn.addEventListener('click', function() {
         alert('Voice input coming soon!');
     });
@@ -517,10 +561,10 @@ function sendMessage() {
     const chatInput = document.getElementById('chat-input');
     const message = chatInput.value.trim();
     if (message === '') return;
-    
+
     addMessageToChat(message, 'user');
     chatInput.value = '';
-    
+
     setTimeout(() => {
         addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ✨", 'solena');
     }, 1000);
@@ -542,48 +586,41 @@ function initApp() {
     const cottageSmall = document.getElementById('cottage-small');
     const container = document.getElementById('landing-container');
     const dusk = document.getElementById('dusk-overlay');
-    const lights = document.getElementById('lights');
     const orb = document.getElementById('solena-orb');
     const chatOverlay = document.getElementById('solena-chat');
-    
+
     function checkTimeAndSetMode() {
         const now = new Date();
         const hour = now.getHours();
-        const isNight = hour >= 19 || hour < 7;
-        
-        if (isNight) {
-            dusk.classList.add('active');
-            if (!isCottageZoomed) {
-                lights.classList.add('active');
-            }
-        } else {
-            dusk.classList.remove('active');
-            if (!isCottageZoomed) {
-                lights.classList.remove('active');
-            }
-        }
+        isNightNow = hour >= 19 || hour < 7;
+
+        if (isNightNow) dusk.classList.add('active');
+        else dusk.classList.remove('active');
+
+        // Always enforce correct lights state on every tick
+        updateLightsVisibility();
     }
-    
+
     if (cottageSmall) {
         cottageSmall.addEventListener('click', function(e) {
             if (isEditMode) return;
             e.stopPropagation();
-            if (!isCottageZoomed) {
-                zoomCottage();
-            }
+            if (!isCottageZoomed) zoomCottage();
         });
     }
-    
+
     container.addEventListener('click', function(e) {
         if (isEditMode) return;
-        if (isCottageZoomed && 
-            e.target !== cottageSmall && 
+        if (
+            isCottageZoomed &&
+            e.target !== cottageSmall &&
             e.target !== orb &&
-            !e.target.closest('.editable-element')) {
+            !e.target.closest('.editable-element')
+        ) {
             unzoomCottage();
         }
     });
-    
+
     if (orb) {
         orb.addEventListener('click', function(e) {
             if (isEditMode) return;
@@ -592,30 +629,31 @@ function initApp() {
             setTimeout(() => chatOverlay.classList.add('active'), 10);
         });
     }
-    
+
+    // Set immediately, then refresh periodically
     checkTimeAndSetMode();
-    setInterval(checkTimeAndSetMode, 3600000);
+    setInterval(checkTimeAndSetMode, 60 * 1000); // every minute (feels more alive than hourly)
 }
 
 function initStorageTest() {
     const testBtn = document.getElementById('testStorageBtn');
-    
+
     if (testBtn) {
         testBtn.addEventListener('click', async function() {
             try {
                 alert('Testing Firebase Storage...');
-                
+
                 const testText = 'Hello from Two Moon Studio!';
                 const testFile = new Blob([testText], { type: 'text/plain' });
-                
+
                 const storageRef = ref(storage, 'test/hello.txt');
                 await uploadBytes(storageRef, testFile);
-                
+
                 const url = await getDownloadURL(storageRef);
-                
+
                 alert('SUCCESS! ✅ Firebase Storage is working!\n\nFile URL: ' + url);
                 console.log('File URL:', url);
-                
+
             } catch (error) {
                 alert('ERROR ❌: ' + error.message);
                 console.error('Firebase Storage error:', error);
