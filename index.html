@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Moon Studio</title>
+    <link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+    <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
+    <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
+    
+    <div id="layoutInfo" class="layout-info hidden">
+        <div class="layout-info-content"></div>
+    </div>
+    
+    <div id="grid-overlay" class="grid-overlay hidden"></div>
+    
+    <div id="landing-container" class="landing-container">
+        <div id="background" class="background-layer"></div>
+        <div id="dusk-overlay" class="dusk-layer"></div>
+        
+        <img id="cottage-small" 
+             src="spring cottage.png"
+             class="editable-element cottage-element"
+             data-edit-name="Cottage (small)"
+             data-edit-icon="🏠"
+             data-edit-view="normal"
+             alt="Cottage">
+        
+        <img id="cottage-zoomed" 
+             src="spring cottage.png"
+             class="editable-element cottage-element zoom-element"
+             data-edit-name="Cottage (zoomed)"
+             data-edit-icon="🔍"
+             data-edit-view="zoomed"
+             alt="Cottage zoomed">
+        
+        <img id="lights" 
+             src="spring cottage lights.png"
+             class="lights-element"
+             alt="Cottage lights">
+        
+        <div id="solena-orb" 
+             class="editable-element orb-element"
+             data-edit-name="Solena Orb"
+             data-edit-icon="✨"
+             data-edit-view="normal">
+        </div>
+    </div>
+    
+    <div id="solena-chat" class="chat-overlay hidden">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-orb-small"></div>
+                <h2>Solena</h2>
+                <button id="close-chat" class="close-chat-btn">✕</button>
+            </div>
+            
+            <div id="chat-messages" class="chat-messages">
+                <div class="message solena-message">
+                    <div class="message-bubble">
+                        Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <button id="voice-input-btn" class="voice-btn">🎤</button>
+                <input type="text" id="chat-input" placeholder="Type your message..." />
+                <button id="send-btn" class="send-btn">Send</button>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="app.js?v=3"></script>
+</body>
+</html>
