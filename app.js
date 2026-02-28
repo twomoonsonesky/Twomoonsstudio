@@ -1,6 +1,7 @@
 // Two Moon Studio - IMAGE-BASED Visual Editor
 import { database, storage } from './firebase-config.js';
-import { ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js';
+import { ref, set, get, child } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js';
 
 let currentOrientation = 'landscape';
 let isEditMode = false;
@@ -63,15 +64,21 @@ function getCurrentLayout() {
 }
 
 async function loadLayout() {
-  try {
-    const response = await fetch('layout.json');
-    const data = await response.json();
-    if (data.landscape) layoutLandscape = data.landscape;
-    if (data.portrait) layoutPortrait = data.portrait;
-    console.log('Layout loaded');
-  } catch (error) {
-    console.log('Using default layout');
-  }
+    try {
+        const snapshot = await get(child(ref(database), 'layout'));
+
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            if (data.landscape) layoutLandscape = data.landscape;
+            if (data.portrait) layoutPortrait = data.portrait;
+            console.log('Layout loaded from Firebase');
+        } else {
+            console.log('No Firebase layout found, using defaults');
+        }
+
+    } catch (error) {
+        console.log('Error loading layout, using defaults', error);
+    }
 }
 
 function applyLayout() {
@@ -401,17 +408,23 @@ function updateLayoutInfo() {
   layoutInfo.querySelector('.layout-info-content').innerHTML = html;
 }
 
-function saveLayout() {
-  const dataObj = { landscape: layoutLandscape, portrait: layoutPortrait };
-  const dataStr = JSON.stringify(dataObj, null, 2);
-  const dataBlob = new Blob([dataStr], { type: 'application/json' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(dataBlob);
-  link.download = 'layout.json';
-  link.click();
-  alert('Layout saved! Replace layout.json in Textastic.');
-  exitEditMode();
-  isEditMode = false;
+async function saveLayout() {
+    const dataObj = {
+        landscape: layoutLandscape,
+        portrait: layoutPortrait
+    };
+
+    try {
+        await set(ref(database, 'layout'), dataObj);
+
+        alert('✅ Layout saved to Firebase!');
+        exitEditMode();
+        isEditMode = false;
+
+    } catch (error) {
+        alert('❌ Error saving layout: ' + error.message);
+        console.error(error);
+    }
 }
 
 window.saveLayout = saveLayout;
