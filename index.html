@@ -6,13 +6,13 @@
   <title>Two Moons Studio</title>
   <link rel="stylesheet" href="styles.css?v=4">
 </head>
-<body>
+<body data-tailor="stitched">
   <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
   <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
 
   <!-- Tailor button -->
   <button id="tailorBtn" style="position: fixed; top: 120px; right: 20px; padding: 12px 24px; background: #6b4fbb; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">
-    🧵 Tailor
+    ð§µ Tailor
   </button>
 
   <div id="layoutInfo" class="layout-info hidden">
@@ -29,7 +29,7 @@
          src="spring cottage.png"
          class="editable-element cottage-element"
          data-edit-name="Cottage (small)"
-         data-edit-icon="🏠"
+         data-edit-icon="ð "
          data-edit-view="normal"
          alt="Cottage">
 
@@ -37,7 +37,7 @@
          src="spring cottage.png"
          class="editable-element cottage-element zoom-element"
          data-edit-name="Cottage (zoomed)"
-         data-edit-icon="🔍"
+         data-edit-icon="ð"
          data-edit-view="zoomed"
          alt="Cottage zoomed">
 
@@ -49,7 +49,7 @@
     <div id="solena-orb"
          class="editable-element orb-element"
          data-edit-name="Solena Orb"
-         data-edit-icon="✨"
+         data-edit-icon="â¨"
          data-edit-view="normal">
     </div>
   </div>
@@ -60,19 +60,19 @@
       <div class="chat-header">
         <div class="chat-orb-small"></div>
         <h2>Solena</h2>
-        <button id="close-chat" class="close-chat-btn">✕</button>
+        <button id="close-chat" class="close-chat-btn">â</button>
       </div>
 
       <div id="chat-messages" class="chat-messages">
         <div class="message solena-message">
           <div class="message-bubble">
-            Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
+            Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? â¨
           </div>
         </div>
       </div>
 
       <div class="chat-input-container">
-        <button id="voice-input-btn" class="voice-btn">🎤</button>
+        <button id="voice-input-btn" class="voice-btn">ð¤</button>
         <input type="text" id="chat-input" placeholder="Type your message..." />
         <button id="send-btn" class="send-btn">Send</button>
       </div>
@@ -101,7 +101,7 @@
         font-family: Georgia, serif;
     ">
       <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-        <div style="font-size:22px; font-weight:bold;">🧵 Tailor (V0)</div>
+        <div style="font-size:22px; font-weight:bold;">ð§µ Tailor (V0)</div>
         <div style="margin-left:auto; display:flex; gap:8px;">
           <button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
         </div>
