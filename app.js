@@ -1,15 +1,10 @@
-// Two Moon Studio - IMAGE-BASED Visual Editor
+// Two Moon Studio - IMAGE-BASED Visual Editor (core world file)
 import { database, storage } from './firebase-config.js';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js';
-
-// Firebase Realtime DB bits (for layout save/load)
 import { ref as dbRef, get, set } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js';
 
 let currentOrientation = 'landscape';
-let isEditMode = false;
 let isCottageZoomed = false;
-
-// Night/day state
 let isNightNow = false;
 
 // ===== Layout defaults =====
@@ -27,13 +22,6 @@ let layoutPortrait = {
   'solena-orb': { left: 80, top: 75, size: 10 }
 };
 
-let dragElement = null;
-let dragOffsetX = 0;
-let dragOffsetY = 0;
-let resizeElement = null;
-let initialSize = 0;
-let initialDistance = 0;
-
 // ===== Firebase layout path (single-user for now) =====
 const LAYOUT_PATH = 'layouts/default';
 
@@ -41,15 +29,28 @@ const LAYOUT_PATH = 'layouts/default';
 document.addEventListener('DOMContentLoaded', async function () {
   detectOrientation();
 
-  await loadLayout();  // loads from Firebase first, falls back to layout.json if present
+  await loadLayout();
   applyLayout();
 
-  initEditMode();
   initChat();
   initApp();
   initStorageTest();
 
-  initTailorV0(); // ✅ in-app patch helper
+  // Toolbelt (layout editor + tailor) lives in tools.js
+  if (window.initTwoMoonsTools) {
+    window.initTwoMoonsTools({
+      // state getters
+      currentOrientation: () => currentOrientation,
+      isCottageZoomed: () => isCottageZoomed,
+
+      // layout + persistence
+      getCurrentLayout,
+      applyLayout,
+      syncLights,
+      updateLightsVisibility,
+      saveLayoutToFirebase
+    });
+  }
 
   window.addEventListener('resize', handleOrientationChange);
 });
@@ -104,14 +105,17 @@ async function saveLayoutToFirebase() {
 function applyLayout() {
   const layout = getCurrentLayout();
   const container = document.getElementById('landing-container');
+  if (!container) return;
+
   const containerWidth = container.clientWidth;
   const containerHeight = container.clientHeight;
 
   Object.keys(layout).forEach(id => {
     const element = document.getElementById(id);
     if (!element) return;
-	
-	if (id === 'cottage-zoomed' && !isCottageZoomed) return;
+
+    // Don't position zoomed cottage when not zoomed
+    if (id === 'cottage-zoomed' && !isCottageZoomed) return;
 
     const config = layout[id];
     const left = (config.left / 100) * containerWidth;
@@ -159,297 +163,6 @@ function updateLightsVisibility() {
   else lights.classList.remove('active');
 }
 
-// ===== Edit mode =====
-function initEditMode() {
-  const editBtn = document.getElementById('editModeBtn');
-  const menu = document.getElementById('editMenu');
-  const layoutOption = document.getElementById('editLayoutOption');
-  const codeOption = document.getElementById('editCodeOption');
-  const tailorOverlay = document.getElementById('tailorOverlay');
-
-  function closeMenu() {
-    if (menu) menu.classList.add('hidden');
-  }
-
-  function toggleMenu() {
-    if (!menu) return;
-    menu.classList.toggle('hidden');
-  }
-
-  // Main Edit button just opens/closes the menu
-  editBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    toggleMenu();
-  });
-
-  // Option: Edit layout (your existing behaviour)
-  layoutOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeMenu();
-    isEditMode = !isEditMode;
-    if (isEditMode) enterEditMode();
-    else exitEditMode();
-  });
-
-  // Option: Edit code (open Taylor)
-  codeOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeMenu();
-    if (tailorOverlay) tailorOverlay.style.display = 'flex';
-  });
-
-  // Click anywhere else closes the menu
-  document.addEventListener('click', closeMenu);
-}
-
-function enterEditMode() {
-  const editBtn = document.getElementById('editModeBtn');
-  const grid = document.getElementById('grid-overlay');
-  const layoutInfo = document.getElementById('layoutInfo');
-
-  editBtn.classList.add('active');
-  editBtn.textContent = 'Editing...';
-  grid.classList.remove('hidden');
-  layoutInfo.classList.remove('hidden');
-
-  updateLayoutInfo();
-  makeElementsEditable();
-}
-
-function exitEditMode() {
-  const editBtn = document.getElementById('editModeBtn');
-  const grid = document.getElementById('grid-overlay');
-  const layoutInfo = document.getElementById('layoutInfo');
-
-  editBtn.classList.remove('active');
-  editBtn.textContent = 'Edit Layout';
-  grid.classList.add('hidden');
-  layoutInfo.classList.add('hidden');
-
-  removeEditListeners();
-}
-
-function makeElementsEditable() {
-  const editables = document.querySelectorAll('.editable-element');
-
-  editables.forEach(element => {
-    const view = element.dataset.editView;
-
-    if (view === 'zoomed' && !isCottageZoomed) {
-      element.classList.remove('edit-mode');
-      return;
-    }
-    if (view === 'normal' && isCottageZoomed && element.classList.contains('cottage-element')) {
-      element.classList.remove('edit-mode');
-      return;
-    }
-
-    element.classList.add('edit-mode');
-
-    element.removeEventListener('touchstart', onDragStart);
-    element.removeEventListener('touchmove', onDragMove);
-    element.removeEventListener('touchend', onDragEnd);
-
-    element.addEventListener('touchstart', onDragStart);
-    element.addEventListener('touchmove', onDragMove);
-    element.addEventListener('touchend', onDragEnd);
-  });
-}
-
-function removeEditListeners() {
-  const editables = document.querySelectorAll('.editable-element');
-  editables.forEach(element => {
-    element.classList.remove('edit-mode');
-    element.removeEventListener('touchstart', onDragStart);
-    element.removeEventListener('touchmove', onDragMove);
-    element.removeEventListener('touchend', onDragEnd);
-  });
-}
-
-function onDragStart(e) {
-  if (!isEditMode) return;
-
-  if (e.touches.length === 1) {
-    e.preventDefault();
-    dragElement = e.target.closest('.editable-element');
-
-    const touch = e.touches[0];
-    const rect = dragElement.getBoundingClientRect();
-
-    dragOffsetX = touch.clientX - rect.left;
-    dragOffsetY = touch.clientY - rect.top;
-
-  } else if (e.touches.length === 2) {
-    e.preventDefault();
-    resizeElement = e.target.closest('.editable-element');
-
-    const touch1 = e.touches[0];
-    const touch2 = e.touches[1];
-    initialDistance = Math.hypot(
-      touch2.clientX - touch1.clientX,
-      touch2.clientY - touch1.clientY
-    );
-
-    const rect = resizeElement.getBoundingClientRect();
-    initialSize = rect.width;
-  }
-}
-
-function onDragMove(e) {
-  if (!isEditMode) return;
-
-  if (dragElement && e.touches.length === 1) {
-    e.preventDefault();
-
-    const touch = e.touches[0];
-    const container = document.getElementById('landing-container');
-    const containerRect = container.getBoundingClientRect();
-
-    let newLeft = touch.clientX - containerRect.left - dragOffsetX;
-    let newTop = touch.clientY - containerRect.top - dragOffsetY;
-
-    const elementWidth = dragElement.offsetWidth;
-    const elementHeight = dragElement.offsetHeight;
-
-    newLeft = Math.max(0, Math.min(containerRect.width - elementWidth, newLeft));
-    newTop = Math.max(0, Math.min(containerRect.height - elementHeight, newTop));
-
-    dragElement.style.left = `${newLeft}px`;
-    dragElement.style.top = `${newTop}px`;
-
-    if (dragElement.id === 'cottage-small' || dragElement.id === 'cottage-zoomed') {
-      syncLights(dragElement.id);
-    }
-
-    updateLayoutInfo();
-
-  } else if (resizeElement && e.touches.length === 2) {
-    e.preventDefault();
-
-    const touch1 = e.touches[0];
-    const touch2 = e.touches[1];
-    const currentDistance = Math.hypot(
-      touch2.clientX - touch1.clientX,
-      touch2.clientY - touch1.clientY
-    );
-
-    const scale = currentDistance / initialDistance;
-    let newSize = initialSize * scale;
-
-    const container = document.getElementById('landing-container');
-    newSize = Math.max(50, Math.min(container.clientWidth * 0.95, newSize));
-
-    resizeElement.style.width = `${newSize}px`;
-
-    if (resizeElement.classList.contains('orb-element')) {
-      resizeElement.style.height = `${newSize}px`;
-    } else {
-      resizeElement.style.height = 'auto';
-    }
-
-    if (resizeElement.id === 'cottage-small' || resizeElement.id === 'cottage-zoomed') {
-      syncLights(resizeElement.id);
-    }
-
-    updateLayoutInfo();
-  }
-}
-
-function onDragEnd() {
-  if (dragElement) {
-    saveElementPosition(dragElement);
-    dragElement = null;
-  }
-
-  if (resizeElement) {
-    saveElementPosition(resizeElement);
-    resizeElement = null;
-  }
-}
-
-function saveElementPosition(element) {
-  const layout = getCurrentLayout();
-  const container = document.getElementById('landing-container');
-  const containerWidth = container.clientWidth;
-  const containerHeight = container.clientHeight;
-
-  const rect = element.getBoundingClientRect();
-  const containerRect = container.getBoundingClientRect();
-
-  const left = ((rect.left - containerRect.left) / containerWidth) * 100;
-  const top = ((rect.top - containerRect.top) / containerHeight) * 100;
-  const width = (rect.width / containerWidth) * 100;
-
-  if (element.classList.contains('orb-element')) {
-    layout[element.id] = { left, top, size: width };
-  } else {
-    layout[element.id] = { left, top, width };
-  }
-}
-
-function updateLayoutInfo() {
-  const layoutInfo = document.getElementById('layoutInfo');
-  const layout = getCurrentLayout();
-  const orientationIcon = currentOrientation === 'landscape' ? '🖥️' : '📱';
-  const orientationName = currentOrientation === 'landscape' ? 'Landscape' : 'Portrait';
-  const viewIcon = isCottageZoomed ? '🔍' : '🏠';
-  const viewName = isCottageZoomed ? 'Zoomed' : 'Normal';
-
-  const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
-
-  let html = `
-    <div style="text-align: center; margin-bottom: 15px;">
-      <strong style="font-size: 16px;">Visual Editor</strong><br>
-      <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-        ${orientationIcon} ${orientationName} • ${viewIcon} ${viewName}
-      </div>
-      <em style="font-size: 12px;">Drag to move • Pinch to resize</em>
-    </div>
-
-    <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-      <button onclick="saveLayout()" style="flex: 1; padding: 12px; background: rgba(100, 200, 100, 0.9); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;">💾 Save</button>
-      <button onclick="closeWithoutSaving()" style="flex: 1; padding: 12px; background: rgba(150, 150, 150, 0.9); color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-weight: bold;">✕ Close</button>
-    </div>
-
-    <div style="font-size: 12px; line-height: 1.8; color: #555;">
-  `;
-
-  currentViewElements.forEach(el => {
-    const name = el.dataset.editName || el.id;
-    const icon = el.dataset.editIcon || '📦';
-    const config = layout[el.id];
-
-    if (config) {
-      html += `<strong>${icon} ${name}</strong><br>`;
-      html += `Position: ${config.left.toFixed(1)}%, ${config.top.toFixed(1)}%<br>`;
-      if (config.size) html += `Size: ${config.size.toFixed(1)}%<br><br>`;
-      else html += `Width: ${config.width.toFixed(1)}%<br><br>`;
-    }
-  });
-
-  html += `</div>`;
-  layoutInfo.querySelector('.layout-info-content').innerHTML = html;
-}
-
-async function saveLayout() {
-  try {
-    await saveLayoutToFirebase();
-    alert('✅ Layout saved to Firebase!');
-  } catch (e) {
-    alert('❌ Could not save to Firebase: ' + (e?.message || e));
-  }
-  exitEditMode();
-  isEditMode = false;
-}
-window.saveLayout = saveLayout;
-
-function closeWithoutSaving() {
-  applyLayout();
-  exitEditMode();
-  isEditMode = false;
-}
-window.closeWithoutSaving = closeWithoutSaving;
-
 // ===== Zoom =====
 function zoomCottage() {
   const cottageSmall = document.getElementById('cottage-small');
@@ -477,15 +190,15 @@ function zoomCottage() {
   cottageZoomed.classList.remove('hidden');
   cottageZoomed.classList.add('zooming');
 
-  background.classList.add('faded');
-  if (orb) orb.classList.add('faded');
+  background?.classList.add('faded');
+  orb?.classList.add('faded');
 
-    setTimeout(() => {
+  setTimeout(() => {
     cottageZoomed.style.left = `${targetLeft}px`;
     cottageZoomed.style.top = `${targetTop}px`;
     cottageZoomed.style.width = `${targetWidth}px`;
 
-    // Sync lights immediately so they move together
+    // Keep lights with cottage
     syncLights('cottage-zoomed');
     updateLightsVisibility();
   }, 50);
@@ -493,12 +206,6 @@ function zoomCottage() {
   setTimeout(() => {
     cottageZoomed.classList.remove('zooming');
     cottageZoomed.classList.add('active');
-
-    if (isEditMode) {
-      removeEditListeners();
-      makeElementsEditable();
-      updateLayoutInfo();
-    }
   }, 650);
 }
 
@@ -512,8 +219,8 @@ function unzoomCottage() {
   cottageZoomed.classList.remove('active');
   cottageZoomed.classList.add('zooming');
 
-  background.classList.remove('faded');
-  if (orb) orb.classList.remove('faded');
+  background?.classList.remove('faded');
+  orb?.classList.remove('faded');
 
   const layout = getCurrentLayout();
   const smallConfig = layout['cottage-small'];
@@ -526,23 +233,18 @@ function unzoomCottage() {
   cottageZoomed.style.left = `${targetLeft}px`;
   cottageZoomed.style.top = `${targetTop}px`;
   cottageZoomed.style.width = `${targetWidth}px`;
-  
+
+  // Keep lights with small cottage during unzoom
   syncLights('cottage-small');
   updateLightsVisibility();
 
-  // After cottage completes unzoom, align lights back to small cottage
   setTimeout(() => {
     cottageZoomed.classList.remove('zooming');
     cottageZoomed.classList.add('hidden');
-
     isCottageZoomed = false;
-   
 
-    if (isEditMode) {
-      removeEditListeners();
-      makeElementsEditable();
-      updateLayoutInfo();
-    }
+    // After fully unzoomed, re-apply layout to ensure everything is correct
+    applyLayout();
   }, 650);
 }
 
@@ -554,24 +256,24 @@ function initChat() {
   const chatInput = document.getElementById('chat-input');
   const voiceBtn = document.getElementById('voice-input-btn');
 
-  closeBtn.addEventListener('click', function () {
+  closeBtn?.addEventListener('click', function () {
     chatOverlay.classList.remove('active');
     setTimeout(() => chatOverlay.classList.add('hidden'), 300);
   });
 
-  chatOverlay.addEventListener('click', function (e) {
+  chatOverlay?.addEventListener('click', function (e) {
     if (e.target === chatOverlay) {
       chatOverlay.classList.remove('active');
       setTimeout(() => chatOverlay.classList.add('hidden'), 300);
     }
   });
 
-  sendBtn.addEventListener('click', sendMessage);
-  chatInput.addEventListener('keypress', function (e) {
+  sendBtn?.addEventListener('click', sendMessage);
+  chatInput?.addEventListener('keypress', function (e) {
     if (e.key === 'Enter') sendMessage();
   });
 
-  voiceBtn.addEventListener('click', function () {
+  voiceBtn?.addEventListener('click', function () {
     alert('Voice input coming soon!');
   });
 }
@@ -614,22 +316,21 @@ function initApp() {
     const hour = now.getHours();
     isNightNow = hour >= 19 || hour < 7;
 
-    if (isNightNow) dusk.classList.add('active');
-    else dusk.classList.remove('active');
+    if (isNightNow) dusk?.classList.add('active');
+    else dusk?.classList.remove('active');
 
     updateLightsVisibility();
   }
 
-  if (cottageSmall) {
-    cottageSmall.addEventListener('click', function (e) {
-      if (isEditMode) return;
-      e.stopPropagation();
-      if (!isCottageZoomed) zoomCottage();
-    });
-  }
+  cottageSmall?.addEventListener('click', function (e) {
+    // if layout editor is on, do nothing (it handles touches)
+    if (document.querySelector('.editable-element.edit-mode')) return;
+    e.stopPropagation();
+    if (!isCottageZoomed) zoomCottage();
+  });
 
-  container.addEventListener('click', function (e) {
-    if (isEditMode) return;
+  container?.addEventListener('click', function (e) {
+    if (document.querySelector('.editable-element.edit-mode')) return;
     if (
       isCottageZoomed &&
       e.target !== cottageSmall &&
@@ -640,14 +341,12 @@ function initApp() {
     }
   });
 
-  if (orb) {
-    orb.addEventListener('click', function (e) {
-      if (isEditMode) return;
-      e.stopPropagation();
-      chatOverlay.classList.remove('hidden');
-      setTimeout(() => chatOverlay.classList.add('active'), 10);
-    });
-  }
+  orb?.addEventListener('click', function (e) {
+    if (document.querySelector('.editable-element.edit-mode')) return;
+    e.stopPropagation();
+    chatOverlay.classList.remove('hidden');
+    setTimeout(() => chatOverlay.classList.add('active'), 10);
+  });
 
   checkTimeAndSetMode();
   setInterval(checkTimeAndSetMode, 60 * 1000);
@@ -657,332 +356,24 @@ function initApp() {
 function initStorageTest() {
   const testBtn = document.getElementById('testStorageBtn');
 
-  if (testBtn) {
-    testBtn.addEventListener('click', async function () {
-      try {
-        alert('Testing Firebase Storage...');
-
-        const testText = 'Hello from Two Moon Studio!';
-        const testFile = new Blob([testText], { type: 'text/plain' });
-
-        const sRef = storageRef(storage, 'test/hello.txt');
-        await uploadBytes(sRef, testFile);
-
-        const url = await getDownloadURL(sRef);
-
-        alert('SUCCESS! ✅ Firebase Storage is working!\n\nFile URL: ' + url);
-        console.log('File URL:', url);
-
-      } catch (error) {
-        alert('ERROR ❌: ' + error.message);
-        console.error('Firebase Storage error:', error);
-      }
-    });
-  }
-}
-
-// =====================================================================
-// 🧵 TAILOR V0 — In-app patcher (GitHub API + token stored locally)
-// =====================================================================
-
-function initTailorV0() {
-  const tailorBtn = document.getElementById('tailorBtn');
-  const overlay = document.getElementById('tailorOverlay');
-  const closeBtn = document.getElementById('tailorCloseBtn');
-  const tokenInput = document.getElementById('tailorToken');
-  const saveTokenBtn = document.getElementById('tailorSaveTokenBtn');
-  const clearTokenBtn = document.getElementById('tailorClearTokenBtn');
-  const status = document.getElementById('tailorTokenStatus');
-
-  const patchArea = document.getElementById('tailorPatch');
-  const dryRunBtn = document.getElementById('tailorDryRunBtn');
-  const commitBtn = document.getElementById('tailorCommitBtn');
-  const result = document.getElementById('tailorResult');
-  const functionBtn = document.getElementById('tailor-go');
-  const functionOutput = document.getElementById('tailor-output');
-  if (!functionBtn || !functionOutput) {
-  return;
-}
-// ===== Tailor V1: toggle function list =====
-let functionsVisible = false;
-let cachedFunctionNames = null;
-function renderFunctionList() {
-  functionOutput.innerHTML = '';
-
-  if (!cachedFunctionNames || cachedFunctionNames.length === 0) {
-    functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
-    return;
-  }
-
-  for (const name of cachedFunctionNames) {
-    const div = document.createElement('div');
-    div.textContent = name;
-    div.style.padding = '4px 0';
-    div.style.cursor = 'pointer';
-    div.style.textDecoration = 'underline';
-
-    div.addEventListener('click', () => {
-      renderFunctionDetail(name);
-    });
-
-    functionOutput.appendChild(div);
-  }
-}
-
-function renderFunctionDetail(name) {
-  functionOutput.innerHTML = '';
-
-  const backBtn = document.createElement('button');
-  backBtn.textContent = '← Back';
-  backBtn.style.padding = '8px 12px';
-  backBtn.style.border = 'none';
-  backBtn.style.borderRadius = '10px';
-  backBtn.style.cursor = 'pointer';
-  backBtn.style.marginBottom = '10px';
-  backBtn.style.background = 'rgba(100,150,255,0.9)';
-  backBtn.style.color = 'white';
-  backBtn.style.fontWeight = 'bold';
-  backBtn.addEventListener('click', renderFunctionList);
-
-  const title = document.createElement('div');
-  title.textContent = name;
-  title.style.fontWeight = 'bold';
-  title.style.margin = '6px 0 8px 0';
-
-  const info = document.createElement('div');
-  info.textContent = 'Next: this panel will show function actions (view code / patch / stitch).';
-  info.style.fontSize = '13px';
-  info.style.opacity = '0.8';
-
-  functionOutput.appendChild(backBtn);
-  functionOutput.appendChild(title);
-  functionOutput.appendChild(info);
-}
-functionBtn.addEventListener('click', async () => {
-  try {
-    // Toggle OFF (hide)
-    if (functionsVisible) {
-      functionOutput.innerHTML = '';
-      functionsVisible = false;
-      functionBtn.textContent = 'Functions ▾';
-      return;
-    }
-
-    // Toggle ON (show)
-    functionBtn.textContent = 'Loading…';
-
-    // If we already parsed once, reuse it (fast + avoids weird state issues)
-    if (!cachedFunctionNames) {
-      const res = await fetch('app.js', { cache: 'no-store' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const text = await res.text();
-
-      const names = new Set();
-
-      // function name() { ... }
-      for (const m of text.matchAll(/function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
-        names.add(m[1] + '()');
-      }
-
-      // const name = (...) => { ... }   OR   let/var name = (...)
-      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*\(/g)) {
-        names.add(m[1] + '()');
-      }
-
-      cachedFunctionNames = [...names].sort();
-    }
-
-    functionOutput.innerHTML = '';
-
-    if (!cachedFunctionNames || cachedFunctionNames.length === 0) {
-      functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
-    } else {
-      for (const name of cachedFunctionNames) {
-        const div = document.createElement('div');
-        div.textContent = name;
-        div.style.padding = '4px 0';
-        functionOutput.appendChild(div);
-      }
-    }
-
-    functionsVisible = true;
-    functionBtn.textContent = 'Functions ▴';
-
-  } catch (err) {
-    functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file.</div>';
-    functionsVisible = false;
-    functionBtn.textContent = 'Functions ▾';
-  }
-});
-  const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
-
-  function setResult(text) {
-    result.textContent = text;
-  }
-
-  function loadTokenFromLocal() {
-    const t = localStorage.getItem(STORAGE_KEY);
-    if (t) {
-      status.textContent = '✅ Token saved on this iPad';
-      tokenInput.value = t;
-    } else {
-      status.textContent = 'No token saved yet.';
-      tokenInput.value = '';
-    }
-  }
-
-  function requireToken() {
-    const t = (tokenInput.value || '').trim();
-    if (!t) throw new Error('No token. Paste token, press Save Token.');
-    return t;
-  }
-
-  function parsePatch() {
-    const raw = patchArea.value.trim();
-    if (!raw) throw new Error('Paste a patch JSON first.');
-    let obj;
-    try { obj = JSON.parse(raw); }
-    catch { throw new Error('Patch JSON is not valid JSON. (Missing comma / bracket).'); }
-
-    const required = ['owner', 'repo', 'branch', 'filePath', 'find', 'replace', 'commitMessage'];
-    for (const k of required) {
-      if (!obj[k] || typeof obj[k] !== 'string') throw new Error(`Patch missing "${k}" (must be a string).`);
-    }
-    return obj;
-  }
-
-  async function ghRequest(token, url, options = {}) {
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        'Accept': 'application/vnd.github+json',
-        'Authorization': `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(options.headers || {})
-      }
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`GitHub error ${res.status}: ${text}`);
-    }
-    return res.json();
-  }
-
-  async function getFileContent(token, owner, repo, path, refName) {
-    // GET /repos/{owner}/{repo}/contents/{path}?ref=...
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(refName)}`;
-    const data = await ghRequest(token, url);
-
-    if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
-    const decoded = atob(data.content.replace(/\n/g, ''));
-    return { decoded, sha: data.sha };
-  }
-
-  function applyReplace(sourceText, find, replace) {
-    // exact substring replace across whole file
-    const count = sourceText.split(find).length - 1;
-    if (count <= 0) return { updated: sourceText, count: 0 };
-    return { updated: sourceText.split(find).join(replace), count };
-  }
-
-  async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-    const body = {
-      message,
-      content: btoa(unescape(encodeURIComponent(newText))), // safe base64 for utf-8
-      sha,
-      branch
-    };
-    return ghRequest(token, url, {
-      method: 'PUT',
-      body: JSON.stringify(body)
-    });
-  }
-
-  tailorBtn?.addEventListener('click', () => {
-    overlay.style.display = 'flex';
-    loadTokenFromLocal();
-    setResult('Ready.');
-  });
-
-  closeBtn?.addEventListener('click', () => {
-    overlay.style.display = 'none';
-  });
-
-  overlay?.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.style.display = 'none';
-  });
-
-  saveTokenBtn?.addEventListener('click', () => {
-    const t = (tokenInput.value || '').trim();
-    if (!t) {
-      status.textContent = 'Paste token first.';
-      return;
-    }
-    localStorage.setItem(STORAGE_KEY, t);
-    status.textContent = '✅ Token saved on this iPad';
-    setResult('Token saved.');
-  });
-
-  clearTokenBtn?.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    tokenInput.value = '';
-    status.textContent = 'Token cleared.';
-    setResult('Token cleared.');
-  });
-
-  dryRunBtn?.addEventListener('click', async () => {
+  testBtn?.addEventListener('click', async function () {
     try {
-      setResult('Dry run…');
-      const token = requireToken();
-      const patch = parsePatch();
+      alert('Testing Firebase Storage...');
 
-      const { decoded } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+      const testText = 'Hello from Two Moon Studio!';
+      const testFile = new Blob([testText], { type: 'text/plain' });
 
-      if (count === 0) {
-        setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: copy/paste the EXACT text you want to replace.`);
-        return;
-      }
+      const sRef = storageRef(storage, 'test/hello.txt');
+      await uploadBytes(sRef, testFile);
 
-      setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
-    } catch (e) {
-      setResult('❌ ' + (e?.message || e));
+      const url = await getDownloadURL(sRef);
+
+      alert('SUCCESS! ✅ Firebase Storage is working!\n\nFile URL: ' + url);
+      console.log('File URL:', url);
+
+    } catch (error) {
+      alert('ERROR ❌: ' + error.message);
+      console.error('Firebase Storage error:', error);
     }
   });
-
-  commitBtn?.addEventListener('click', async () => {
-    try {
-      setResult('Committing patch…');
-      const token = requireToken();
-      const patch = parsePatch();
-
-      const { decoded, sha } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
-
-      if (count === 0) {
-        setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
-        return;
-      }
-
-      await putFileContent(
-        token,
-        patch.owner,
-        patch.repo,
-        patch.filePath,
-        patch.branch,
-        patch.commitMessage,
-        updated,
-        sha
-      );
-
-      setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
-    } catch (e) {
-      setResult('❌ ' + (e?.message || e));
-    }
-  });
-
-  // initial state (quiet)
-  loadTokenFromLocal();
 }
