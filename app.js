@@ -838,3 +838,45 @@ function initTailorV0() {
   // initial state (quiet)
   loadTokenFromLocal();
 }
+// ===== Taylor: list functions (v1) =====
+document.getElementById("tailor-go")?.addEventListener("click", async () => {
+
+  const output = document.getElementById("tailor-output");
+  if (!output) return;
+
+  output.innerHTML = "Loading...";
+
+  try {
+    const response = await fetch("app.js", { cache: "no-store" });
+    const text = await response.text();
+
+    const functionNames = new Set();
+
+    const regularFunctions = text.matchAll(/function\s+([A-Za-z0-9_$]+)\s*\(/g);
+    for (const match of regularFunctions) {
+      functionNames.add(match[1] + "()");
+    }
+
+    const arrowFunctions = text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*\(/g);
+    for (const match of arrowFunctions) {
+      functionNames.add(match[1] + "()");
+    }
+
+    if (functionNames.size === 0) {
+      output.innerHTML = "No functions found.";
+      return;
+    }
+
+    output.innerHTML = "";
+    [...functionNames].sort().forEach(name => {
+      const div = document.createElement("div");
+      div.textContent = name;
+      div.style.padding = "4px 0";
+      output.appendChild(div);
+    });
+
+  } catch (error) {
+    output.innerHTML = "Error loading file.";
+  }
+
+});

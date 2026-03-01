@@ -10,10 +10,23 @@
   <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
   <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
 
-  <!-- Tailor button -->
-  <button id="tailorBtn" style="position: fixed; top: 120px; right: 20px; padding: 12px 24px; background: #6b4fbb; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">
-    🧵 Tailor
+<!-- TAYLOR (v1) -->
+<div id="tailor-panel" style="position:fixed; top:120px; right:16px; z-index:9999; background:rgba(255,255,255,0.92); padding:12px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.25); width:260px;">
+  <div style="font-weight:bold; margin-bottom:8px;">🧵 Taylor</div>
+
+  <label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
+  <select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
+    <option value="app.js" selected>JavaScript (app.js)</option>
+    <option value="index.html" disabled>HTML (coming soon)</option>
+    <option value="styles.css" disabled>CSS (coming soon)</option>
+  </select>
+
+  <button id="tailor-go" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px; background:rgba(100,150,255,0.9); color:white; font-weight:bold;">
+    Show functions
   </button>
+
+  <div id="tailor-output" style="margin-top:10px; font-size:12px; max-height:180px; overflow:auto; background:rgba(0,0,0,0.04); padding:10px; border-radius:10px;"></div>
+</div>
 
   <div id="layoutInfo" class="layout-info hidden">
     <div class="layout-info-content"></div>
