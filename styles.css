@@ -111,8 +111,8 @@ body {
     opacity: 0;
     pointer-events: none;
     /* Only animate fade. Never animate position/size (prevents lag). */
-    transition: opacity 1s ease;
-    will-change: opacity;
+    transition: left 0.6s ease, top 0.6s ease, width 0.6s ease, height 0.6s ease, opacity 1s ease;
+will-change: left, top, width, height, opacity;
 }
 
 .lights-element.active {

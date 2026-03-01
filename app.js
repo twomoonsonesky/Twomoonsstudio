@@ -110,6 +110,8 @@ function applyLayout() {
   Object.keys(layout).forEach(id => {
     const element = document.getElementById(id);
     if (!element) return;
+	
+	if (id === 'cottage-zoomed' && !isCottageZoomed) return;
 
     const config = layout[id];
     const left = (config.left / 100) * containerWidth;
@@ -160,11 +162,44 @@ function updateLightsVisibility() {
 // ===== Edit mode =====
 function initEditMode() {
   const editBtn = document.getElementById('editModeBtn');
-  editBtn.addEventListener('click', function () {
+  const menu = document.getElementById('editMenu');
+  const layoutOption = document.getElementById('editLayoutOption');
+  const codeOption = document.getElementById('editCodeOption');
+  const tailorOverlay = document.getElementById('tailorOverlay');
+
+  function closeMenu() {
+    if (menu) menu.classList.add('hidden');
+  }
+
+  function toggleMenu() {
+    if (!menu) return;
+    menu.classList.toggle('hidden');
+  }
+
+  // Main Edit button just opens/closes the menu
+  editBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Option: Edit layout (your existing behaviour)
+  layoutOption?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeMenu();
     isEditMode = !isEditMode;
     if (isEditMode) enterEditMode();
     else exitEditMode();
   });
+
+  // Option: Edit code (open Taylor)
+  codeOption?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeMenu();
+    if (tailorOverlay) tailorOverlay.style.display = 'flex';
+  });
+
+  // Click anywhere else closes the menu
+  document.addEventListener('click', closeMenu);
 }
 
 function enterEditMode() {
@@ -445,18 +480,14 @@ function zoomCottage() {
   background.classList.add('faded');
   if (orb) orb.classList.add('faded');
 
-  // During the zoom animation, we keep lights synced after the animation ends
-  setTimeout(() => {
+    setTimeout(() => {
     cottageZoomed.style.left = `${targetLeft}px`;
     cottageZoomed.style.top = `${targetTop}px`;
     cottageZoomed.style.width = `${targetWidth}px`;
 
-    // After cottage reaches its zoom position, align lights to match
-    setTimeout(() => {
-      syncLights('cottage-zoomed');
-      updateLightsVisibility();
-    }, 620);
-
+    // Sync lights immediately so they move together
+    syncLights('cottage-zoomed');
+    updateLightsVisibility();
   }, 50);
 
   setTimeout(() => {
@@ -495,6 +526,9 @@ function unzoomCottage() {
   cottageZoomed.style.left = `${targetLeft}px`;
   cottageZoomed.style.top = `${targetTop}px`;
   cottageZoomed.style.width = `${targetWidth}px`;
+  
+  syncLights('cottage-small');
+  updateLightsVisibility();
 
   // After cottage completes unzoom, align lights back to small cottage
   setTimeout(() => {
@@ -502,8 +536,7 @@ function unzoomCottage() {
     cottageZoomed.classList.add('hidden');
 
     isCottageZoomed = false;
-    syncLights('cottage-small');
-    updateLightsVisibility();
+   
 
     if (isEditMode) {
       removeEditListeners();
@@ -665,7 +698,122 @@ function initTailorV0() {
   const dryRunBtn = document.getElementById('tailorDryRunBtn');
   const commitBtn = document.getElementById('tailorCommitBtn');
   const result = document.getElementById('tailorResult');
+  const functionBtn = document.getElementById('tailor-go');
+  const functionOutput = document.getElementById('tailor-output');
+  if (!functionBtn || !functionOutput) {
+  return;
+}
+// ===== Tailor V1: toggle function list =====
+let functionsVisible = false;
+let cachedFunctionNames = null;
+function renderFunctionList() {
+  functionOutput.innerHTML = '';
 
+  if (!cachedFunctionNames || cachedFunctionNames.length === 0) {
+    functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
+    return;
+  }
+
+  for (const name of cachedFunctionNames) {
+    const div = document.createElement('div');
+    div.textContent = name;
+    div.style.padding = '4px 0';
+    div.style.cursor = 'pointer';
+    div.style.textDecoration = 'underline';
+
+    div.addEventListener('click', () => {
+      renderFunctionDetail(name);
+    });
+
+    functionOutput.appendChild(div);
+  }
+}
+
+function renderFunctionDetail(name) {
+  functionOutput.innerHTML = '';
+
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← Back';
+  backBtn.style.padding = '8px 12px';
+  backBtn.style.border = 'none';
+  backBtn.style.borderRadius = '10px';
+  backBtn.style.cursor = 'pointer';
+  backBtn.style.marginBottom = '10px';
+  backBtn.style.background = 'rgba(100,150,255,0.9)';
+  backBtn.style.color = 'white';
+  backBtn.style.fontWeight = 'bold';
+  backBtn.addEventListener('click', renderFunctionList);
+
+  const title = document.createElement('div');
+  title.textContent = name;
+  title.style.fontWeight = 'bold';
+  title.style.margin = '6px 0 8px 0';
+
+  const info = document.createElement('div');
+  info.textContent = 'Next: this panel will show function actions (view code / patch / stitch).';
+  info.style.fontSize = '13px';
+  info.style.opacity = '0.8';
+
+  functionOutput.appendChild(backBtn);
+  functionOutput.appendChild(title);
+  functionOutput.appendChild(info);
+}
+functionBtn.addEventListener('click', async () => {
+  try {
+    // Toggle OFF (hide)
+    if (functionsVisible) {
+      functionOutput.innerHTML = '';
+      functionsVisible = false;
+      functionBtn.textContent = 'Functions ▾';
+      return;
+    }
+
+    // Toggle ON (show)
+    functionBtn.textContent = 'Loading…';
+
+    // If we already parsed once, reuse it (fast + avoids weird state issues)
+    if (!cachedFunctionNames) {
+      const res = await fetch('app.js', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const text = await res.text();
+
+      const names = new Set();
+
+      // function name() { ... }
+      for (const m of text.matchAll(/function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
+        names.add(m[1] + '()');
+      }
+
+      // const name = (...) => { ... }   OR   let/var name = (...)
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*\(/g)) {
+        names.add(m[1] + '()');
+      }
+
+      cachedFunctionNames = [...names].sort();
+    }
+
+    functionOutput.innerHTML = '';
+
+    if (!cachedFunctionNames || cachedFunctionNames.length === 0) {
+      functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
+    } else {
+      for (const name of cachedFunctionNames) {
+        const div = document.createElement('div');
+        div.textContent = name;
+        div.style.padding = '4px 0';
+        functionOutput.appendChild(div);
+      }
+    }
+
+    functionsVisible = true;
+    functionBtn.textContent = 'Functions ▴';
+
+  } catch (err) {
+    functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file.</div>';
+    functionsVisible = false;
+    functionBtn.textContent = 'Functions ▾';
+  }
+});
   const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
   function setResult(text) {
@@ -838,45 +986,3 @@ function initTailorV0() {
   // initial state (quiet)
   loadTokenFromLocal();
 }
-// ===== Taylor: list functions (v1) =====
-document.getElementById("tailor-go")?.addEventListener("click", async () => {
-
-  const output = document.getElementById("tailor-output");
-  if (!output) return;
-
-  output.innerHTML = "Loading...";
-
-  try {
-    const response = await fetch("app.js", { cache: "no-store" });
-    const text = await response.text();
-
-    const functionNames = new Set();
-
-    const regularFunctions = text.matchAll(/function\s+([A-Za-z0-9_$]+)\s*\(/g);
-    for (const match of regularFunctions) {
-      functionNames.add(match[1] + "()");
-    }
-
-    const arrowFunctions = text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*\(/g);
-    for (const match of arrowFunctions) {
-      functionNames.add(match[1] + "()");
-    }
-
-    if (functionNames.size === 0) {
-      output.innerHTML = "No functions found.";
-      return;
-    }
-
-    output.innerHTML = "";
-    [...functionNames].sort().forEach(name => {
-      const div = document.createElement("div");
-      div.textContent = name;
-      div.style.padding = "4px 0";
-      output.appendChild(div);
-    });
-
-  } catch (error) {
-    output.innerHTML = "Error loading file.";
-  }
-
-});

@@ -7,26 +7,27 @@
   <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
-  <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
-  <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
+  <button id="editModeBtn">Edit</button>
+
+<div id="editMenu" class="hidden" style="
+  position: absolute;
+  top: 60px;
+  left: 12px;
+  z-index: 9999;
+  background: rgba(255,255,255,0.95);
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 160px;">
+  <button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">✏️ Edit layout</button>
+  <button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">🧵 Edit code</button>
+</div>
 
 <!-- TAYLOR (v1) -->
-<div id="tailor-panel" style="position:fixed; top:120px; left:16px; z-index:9999; background:rgba(255,255,255,0.92); padding:12px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,0.25); width:260px;">
-  <div style="font-weight:bold; margin-bottom:8px;">🧵 Taylor</div>
 
-  <label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
-  <select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
-    <option value="app.js" selected>JavaScript (app.js)</option>
-    <option value="index.html" disabled>HTML (coming soon)</option>
-    <option value="styles.css" disabled>CSS (coming soon)</option>
-  </select>
-
-  <button id="tailor-go" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px; background:rgba(100,150,255,0.9); color:white; font-weight:bold;">
-    Show functions
-  </button>
-
-  <div id="tailor-output" style="margin-top:10px; font-size:12px; max-height:180px; overflow:auto; background:rgba(0,0,0,0.04); padding:10px; border-radius:10px;"></div>
-</div>
 
   <div id="layoutInfo" class="layout-info hidden">
     <div class="layout-info-content"></div>
@@ -148,6 +149,31 @@
   "commitMessage": "Tailor patch: update interval"
 }'
           style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+	
+	<!-- ===== Tailor v1: Function Finder (inside overlay) ===== -->
+<div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,0,0,0.08);">
+
+  <div style="font-weight:bold; margin-bottom:8px;">🧵 Tailor — Function Finder</div>
+
+  <label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
+  <select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
+    <option value="app.js" selected>JavaScript (app.js)</option>
+    <option value="index.html" disabled>HTML (coming soon)</option>
+    <option value="styles.css" disabled>CSS (coming soon)</option>
+  </select>
+
+  <button id="tailor-go"
+    style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px;
+           background:rgba(100,150,255,0.9); color:white; font-weight:bold; cursor:pointer;">
+    Show functions
+  </button>
+
+  <div id="tailor-output"
+    style="margin-top:10px; font-size:12px; max-height:220px; overflow:auto;
+           background:rgba(0,0,0,0.04); padding:10px; border-radius:10px;">
+  </div>
+
+</div>	  
 
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button id="tailorDryRunBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">Dry Run</button>
