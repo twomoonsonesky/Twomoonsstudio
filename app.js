@@ -1,19 +1,18 @@
 // Two Moon Studio - IMAGE-BASED Visual Editor
 import { database, storage } from './firebase-config.js';
-import { ref, set, get, child } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js';
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-storage.js';
+
+// Firebase Realtime DB bits (for layout save/load)
+import { ref as dbRef, get, set } from 'https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js';
 
 let currentOrientation = 'landscape';
 let isEditMode = false;
 let isCottageZoomed = false;
 
-// Night/day state (single source of truth for lights + dusk)
+// Night/day state
 let isNightNow = false;
 
-// Cached DOM refs (set in initApp)
-let duskEl = null;
-let lightsEl = null;
-
+// ===== Layout defaults =====
 let layoutLandscape = {
   'cottage-small': { left: 20, top: 40, width: 20 },
   'cottage-zoomed': { left: 10, top: 10, width: 80 },
@@ -35,18 +34,27 @@ let resizeElement = null;
 let initialSize = 0;
 let initialDistance = 0;
 
+// ===== Firebase layout path (single-user for now) =====
+const LAYOUT_PATH = 'layouts/default';
+
+// ===== Boot =====
 document.addEventListener('DOMContentLoaded', async function () {
   detectOrientation();
-  await loadLayout();
+
+  await loadLayout();  // loads from Firebase first, falls back to layout.json if present
   applyLayout();
+
   initEditMode();
   initChat();
   initApp();
   initStorageTest();
 
+  initTailorV0(); // ✅ in-app patch helper
+
   window.addEventListener('resize', handleOrientationChange);
 });
 
+// ===== Orientation =====
 function detectOrientation() {
   currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
 }
@@ -54,33 +62,45 @@ function detectOrientation() {
 function handleOrientationChange() {
   const oldOrientation = currentOrientation;
   detectOrientation();
-  if (oldOrientation !== currentOrientation) {
-    applyLayout();
-  }
+  if (oldOrientation !== currentOrientation) applyLayout();
 }
 
 function getCurrentLayout() {
   return currentOrientation === 'landscape' ? layoutLandscape : layoutPortrait;
 }
 
+// ===== Load/Save Layout =====
 async function loadLayout() {
-    try {
-        const snapshot = await get(child(ref(database), 'layout'));
-
-        if (snapshot.exists()) {
-            const data = snapshot.val();
-            if (data.landscape) layoutLandscape = data.landscape;
-            if (data.portrait) layoutPortrait = data.portrait;
-            console.log('Layout loaded from Firebase');
-        } else {
-            console.log('No Firebase layout found, using defaults');
-        }
-
-    } catch (error) {
-        console.log('Error loading layout, using defaults', error);
+  // 1) Try Firebase
+  try {
+    const snap = await get(dbRef(database, LAYOUT_PATH));
+    if (snap.exists()) {
+      const data = snap.val();
+      if (data?.landscape) layoutLandscape = data.landscape;
+      if (data?.portrait) layoutPortrait = data.portrait;
+      return;
     }
+  } catch (e) {
+    // ignore and fallback
+  }
+
+  // 2) Fallback to local layout.json if present
+  try {
+    const response = await fetch('layout.json');
+    const data = await response.json();
+    if (data.landscape) layoutLandscape = data.landscape;
+    if (data.portrait) layoutPortrait = data.portrait;
+  } catch (error) {
+    // default layout stays
+  }
 }
 
+async function saveLayoutToFirebase() {
+  const dataObj = { landscape: layoutLandscape, portrait: layoutPortrait };
+  await set(dbRef(database, LAYOUT_PATH), dataObj);
+}
+
+// ===== Apply layout =====
 function applyLayout() {
   const layout = getCurrentLayout();
   const container = document.getElementById('landing-container');
@@ -112,13 +132,14 @@ function applyLayout() {
     element.style.top = `${top}px`;
   });
 
-  syncLightsInstant(isCottageZoomed ? 'cottage-zoomed' : 'cottage-small');
-  refreshNightMode(); // <-- IMPORTANT: re-assert correct lights state after layout
+  syncLights(isCottageZoomed ? 'cottage-zoomed' : 'cottage-small');
+  updateLightsVisibility();
 }
 
+// ===== Lights positioning =====
 function syncLights(cottageId) {
   const cottage = document.getElementById(cottageId);
-  const lights = lightsEl || document.getElementById('lights');
+  const lights = document.getElementById('lights');
   if (!cottage || !lights) return;
 
   lights.style.left = cottage.style.left;
@@ -127,51 +148,18 @@ function syncLights(cottageId) {
   lights.style.height = cottage.style.height;
 }
 
-// Reposition lights with ZERO lag
-function syncLightsInstant(cottageId) {
-  const lights = lightsEl || document.getElementById('lights');
+// ===== Lights visibility =====
+function updateLightsVisibility() {
+  const lights = document.getElementById('lights');
   if (!lights) return;
 
-  const prev = lights.style.transition;
-  lights.style.transition = 'none';
-  syncLights(cottageId);
-  void lights.offsetHeight; // force reflow
-  lights.style.transition = prev;
+  if (isNightNow) lights.classList.add('active');
+  else lights.classList.remove('active');
 }
 
-// ---- NIGHT MODE: single source of truth ----
-function computeIsNight(date = new Date()) {
-  const hour = date.getHours();
-  return hour >= 19 || hour < 7;
-}
-
-function setNightMode(nightBool) {
-  isNightNow = !!nightBool;
-
-  if (duskEl) {
-    if (isNightNow) duskEl.classList.add('active');
-    else duskEl.classList.remove('active');
-  }
-
-  if (lightsEl) {
-    if (isNightNow) lightsEl.classList.add('active');
-    else lightsEl.classList.remove('active');
-  }
-}
-
-function refreshNightMode() {
-  setNightMode(computeIsNight());
-}
-
-// Optional manual tester from console / bookmarklet:
-// window.forceNight(true) or window.forceNight(false)
-window.forceNight = (v) => setNightMode(!!v);
-
-// -------------------------------------------
-
+// ===== Edit mode =====
 function initEditMode() {
   const editBtn = document.getElementById('editModeBtn');
-
   editBtn.addEventListener('click', function () {
     isEditMode = !isEditMode;
     if (isEditMode) enterEditMode();
@@ -295,7 +283,7 @@ function onDragMove(e) {
     dragElement.style.top = `${newTop}px`;
 
     if (dragElement.id === 'cottage-small' || dragElement.id === 'cottage-zoomed') {
-      syncLightsInstant(dragElement.id);
+      syncLights(dragElement.id);
     }
 
     updateLayoutInfo();
@@ -325,7 +313,7 @@ function onDragMove(e) {
     }
 
     if (resizeElement.id === 'cottage-small' || resizeElement.id === 'cottage-zoomed') {
-      syncLightsInstant(resizeElement.id);
+      syncLights(resizeElement.id);
     }
 
     updateLayoutInfo();
@@ -409,24 +397,15 @@ function updateLayoutInfo() {
 }
 
 async function saveLayout() {
-    const dataObj = {
-        landscape: layoutLandscape,
-        portrait: layoutPortrait
-    };
-
-    try {
-        await set(ref(database, 'layout'), dataObj);
-
-        alert('✅ Layout saved to Firebase!');
-        exitEditMode();
-        isEditMode = false;
-
-    } catch (error) {
-        alert('❌ Error saving layout: ' + error.message);
-        console.error(error);
-    }
+  try {
+    await saveLayoutToFirebase();
+    alert('✅ Layout saved to Firebase!');
+  } catch (e) {
+    alert('❌ Could not save to Firebase: ' + (e?.message || e));
+  }
+  exitEditMode();
+  isEditMode = false;
 }
-
 window.saveLayout = saveLayout;
 
 function closeWithoutSaving() {
@@ -434,9 +413,9 @@ function closeWithoutSaving() {
   exitEditMode();
   isEditMode = false;
 }
-
 window.closeWithoutSaving = closeWithoutSaving;
 
+// ===== Zoom =====
 function zoomCottage() {
   const cottageSmall = document.getElementById('cottage-small');
   const cottageZoomed = document.getElementById('cottage-zoomed');
@@ -446,10 +425,6 @@ function zoomCottage() {
   if (!cottageSmall || !cottageZoomed) return;
 
   isCottageZoomed = true;
-
-  // Align lights immediately (but NEVER force them on)
-  syncLightsInstant('cottage-small');
-  refreshNightMode();
 
   const smallRect = cottageSmall.getBoundingClientRect();
   const layout = getCurrentLayout();
@@ -470,16 +445,17 @@ function zoomCottage() {
   background.classList.add('faded');
   if (orb) orb.classList.add('faded');
 
+  // During the zoom animation, we keep lights synced after the animation ends
   setTimeout(() => {
     cottageZoomed.style.left = `${targetLeft}px`;
     cottageZoomed.style.top = `${targetTop}px`;
     cottageZoomed.style.width = `${targetWidth}px`;
 
-    // Lock lights to zoomed cottage during/after animation
+    // After cottage reaches its zoom position, align lights to match
     setTimeout(() => {
-      syncLightsInstant('cottage-zoomed');
-      refreshNightMode();
-    }, 60);
+      syncLights('cottage-zoomed');
+      updateLightsVisibility();
+    }, 620);
 
   }, 50);
 
@@ -520,17 +496,14 @@ function unzoomCottage() {
   cottageZoomed.style.top = `${targetTop}px`;
   cottageZoomed.style.width = `${targetWidth}px`;
 
-  syncLightsInstant('cottage-zoomed');
-  refreshNightMode();
-
+  // After cottage completes unzoom, align lights back to small cottage
   setTimeout(() => {
     cottageZoomed.classList.remove('zooming');
     cottageZoomed.classList.add('hidden');
 
     isCottageZoomed = false;
-
-    syncLightsInstant('cottage-small');
-    refreshNightMode();
+    syncLights('cottage-small');
+    updateLightsVisibility();
 
     if (isEditMode) {
       removeEditListeners();
@@ -540,6 +513,7 @@ function unzoomCottage() {
   }, 650);
 }
 
+// ===== Chat =====
 function initChat() {
   const chatOverlay = document.getElementById('solena-chat');
   const closeBtn = document.getElementById('close-chat');
@@ -594,17 +568,24 @@ function addMessageToChat(text, sender) {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+// ===== App interactions =====
 function initApp() {
   const cottageSmall = document.getElementById('cottage-small');
   const container = document.getElementById('landing-container');
-  duskEl = document.getElementById('dusk-overlay');
-  lightsEl = document.getElementById('lights');
+  const dusk = document.getElementById('dusk-overlay');
   const orb = document.getElementById('solena-orb');
   const chatOverlay = document.getElementById('solena-chat');
 
-  // Set immediately, then refresh periodically
-  refreshNightMode();
-  setInterval(refreshNightMode, 60 * 1000); // every minute
+  function checkTimeAndSetMode() {
+    const now = new Date();
+    const hour = now.getHours();
+    isNightNow = hour >= 19 || hour < 7;
+
+    if (isNightNow) dusk.classList.add('active');
+    else dusk.classList.remove('active');
+
+    updateLightsVisibility();
+  }
 
   if (cottageSmall) {
     cottageSmall.addEventListener('click', function (e) {
@@ -634,8 +615,12 @@ function initApp() {
       setTimeout(() => chatOverlay.classList.add('active'), 10);
     });
   }
+
+  checkTimeAndSetMode();
+  setInterval(checkTimeAndSetMode, 60 * 1000);
 }
 
+// ===== Firebase Storage test =====
 function initStorageTest() {
   const testBtn = document.getElementById('testStorageBtn');
 
@@ -647,10 +632,10 @@ function initStorageTest() {
         const testText = 'Hello from Two Moon Studio!';
         const testFile = new Blob([testText], { type: 'text/plain' });
 
-        const storageRef = ref(storage, 'test/hello.txt');
-        await uploadBytes(storageRef, testFile);
+        const sRef = storageRef(storage, 'test/hello.txt');
+        await uploadBytes(sRef, testFile);
 
-        const url = await getDownloadURL(storageRef);
+        const url = await getDownloadURL(sRef);
 
         alert('SUCCESS! ✅ Firebase Storage is working!\n\nFile URL: ' + url);
         console.log('File URL:', url);
@@ -661,4 +646,195 @@ function initStorageTest() {
       }
     });
   }
+}
+
+// =====================================================================
+// 🧵 TAILOR V0 — In-app patcher (GitHub API + token stored locally)
+// =====================================================================
+
+function initTailorV0() {
+  const tailorBtn = document.getElementById('tailorBtn');
+  const overlay = document.getElementById('tailorOverlay');
+  const closeBtn = document.getElementById('tailorCloseBtn');
+  const tokenInput = document.getElementById('tailorToken');
+  const saveTokenBtn = document.getElementById('tailorSaveTokenBtn');
+  const clearTokenBtn = document.getElementById('tailorClearTokenBtn');
+  const status = document.getElementById('tailorTokenStatus');
+
+  const patchArea = document.getElementById('tailorPatch');
+  const dryRunBtn = document.getElementById('tailorDryRunBtn');
+  const commitBtn = document.getElementById('tailorCommitBtn');
+  const result = document.getElementById('tailorResult');
+
+  const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
+
+  function setResult(text) {
+    result.textContent = text;
+  }
+
+  function loadTokenFromLocal() {
+    const t = localStorage.getItem(STORAGE_KEY);
+    if (t) {
+      status.textContent = '✅ Token saved on this iPad';
+      tokenInput.value = t;
+    } else {
+      status.textContent = 'No token saved yet.';
+      tokenInput.value = '';
+    }
+  }
+
+  function requireToken() {
+    const t = (tokenInput.value || '').trim();
+    if (!t) throw new Error('No token. Paste token, press Save Token.');
+    return t;
+  }
+
+  function parsePatch() {
+    const raw = patchArea.value.trim();
+    if (!raw) throw new Error('Paste a patch JSON first.');
+    let obj;
+    try { obj = JSON.parse(raw); }
+    catch { throw new Error('Patch JSON is not valid JSON. (Missing comma / bracket).'); }
+
+    const required = ['owner', 'repo', 'branch', 'filePath', 'find', 'replace', 'commitMessage'];
+    for (const k of required) {
+      if (!obj[k] || typeof obj[k] !== 'string') throw new Error(`Patch missing "${k}" (must be a string).`);
+    }
+    return obj;
+  }
+
+  async function ghRequest(token, url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        'Accept': 'application/vnd.github+json',
+        'Authorization': `Bearer ${token}`,
+        'X-GitHub-Api-Version': '2022-11-28',
+        ...(options.headers || {})
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub error ${res.status}: ${text}`);
+    }
+    return res.json();
+  }
+
+  async function getFileContent(token, owner, repo, path, refName) {
+    // GET /repos/{owner}/{repo}/contents/{path}?ref=...
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(refName)}`;
+    const data = await ghRequest(token, url);
+
+    if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
+    const decoded = atob(data.content.replace(/\n/g, ''));
+    return { decoded, sha: data.sha };
+  }
+
+  function applyReplace(sourceText, find, replace) {
+    // exact substring replace across whole file
+    const count = sourceText.split(find).length - 1;
+    if (count <= 0) return { updated: sourceText, count: 0 };
+    return { updated: sourceText.split(find).join(replace), count };
+  }
+
+  async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+    const body = {
+      message,
+      content: btoa(unescape(encodeURIComponent(newText))), // safe base64 for utf-8
+      sha,
+      branch
+    };
+    return ghRequest(token, url, {
+      method: 'PUT',
+      body: JSON.stringify(body)
+    });
+  }
+
+  tailorBtn?.addEventListener('click', () => {
+    overlay.style.display = 'flex';
+    loadTokenFromLocal();
+    setResult('Ready.');
+  });
+
+  closeBtn?.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+
+  overlay?.addEventListener('click', (e) => {
+    if (e.target === overlay) overlay.style.display = 'none';
+  });
+
+  saveTokenBtn?.addEventListener('click', () => {
+    const t = (tokenInput.value || '').trim();
+    if (!t) {
+      status.textContent = 'Paste token first.';
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, t);
+    status.textContent = '✅ Token saved on this iPad';
+    setResult('Token saved.');
+  });
+
+  clearTokenBtn?.addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_KEY);
+    tokenInput.value = '';
+    status.textContent = 'Token cleared.';
+    setResult('Token cleared.');
+  });
+
+  dryRunBtn?.addEventListener('click', async () => {
+    try {
+      setResult('Dry run…');
+      const token = requireToken();
+      const patch = parsePatch();
+
+      const { decoded } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+
+      if (count === 0) {
+        setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: copy/paste the EXACT text you want to replace.`);
+        return;
+      }
+
+      setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
+    } catch (e) {
+      setResult('❌ ' + (e?.message || e));
+    }
+  });
+
+  commitBtn?.addEventListener('click', async () => {
+    try {
+      setResult('Committing patch…');
+      const token = requireToken();
+      const patch = parsePatch();
+
+      const { decoded, sha } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+
+      if (count === 0) {
+        setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
+        return;
+      }
+
+      await putFileContent(
+        token,
+        patch.owner,
+        patch.repo,
+        patch.filePath,
+        patch.branch,
+        patch.commitMessage,
+        updated,
+        sha
+      );
+
+      setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
+    } catch (e) {
+      setResult('❌ ' + (e?.message || e));
+    }
+  });
+
+  // initial state (quiet)
+  loadTokenFromLocal();
 }

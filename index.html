@@ -1,78 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Moon Studio</title>
-    <link rel="stylesheet" href="styles.css?v=3">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Two Moons Studio</title>
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
-    <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
-    <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
-    
-    <div id="layoutInfo" class="layout-info hidden">
-        <div class="layout-info-content"></div>
+  <button id="editModeBtn" class="edit-mode-button">Edit Layout</button>
+  <button id="testStorageBtn" style="position: fixed; top: 70px; right: 20px; padding: 12px 24px; background: green; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">Test Storage</button>
+
+  <!-- Tailor button -->
+  <button id="tailorBtn" style="position: fixed; top: 120px; right: 20px; padding: 12px 24px; background: #6b4fbb; color: white; border: none; border-radius: 8px; cursor: pointer; z-index: 2000; font-weight: bold;">
+    🧵 Tailor
+  </button>
+
+  <div id="layoutInfo" class="layout-info hidden">
+    <div class="layout-info-content"></div>
+  </div>
+
+  <div id="grid-overlay" class="grid-overlay hidden"></div>
+
+  <div id="landing-container" class="landing-container">
+    <div id="background" class="background-layer"></div>
+    <div id="dusk-overlay" class="dusk-layer"></div>
+
+    <img id="cottage-small"
+         src="spring cottage.png"
+         class="editable-element cottage-element"
+         data-edit-name="Cottage (small)"
+         data-edit-icon="🏠"
+         data-edit-view="normal"
+         alt="Cottage">
+
+    <img id="cottage-zoomed"
+         src="spring cottage.png"
+         class="editable-element cottage-element zoom-element"
+         data-edit-name="Cottage (zoomed)"
+         data-edit-icon="🔍"
+         data-edit-view="zoomed"
+         alt="Cottage zoomed">
+
+    <img id="lights"
+         src="spring cottage lights.png"
+         class="lights-element"
+         alt="Cottage lights">
+
+    <div id="solena-orb"
+         class="editable-element orb-element"
+         data-edit-name="Solena Orb"
+         data-edit-icon="✨"
+         data-edit-view="normal">
     </div>
-    
-    <div id="grid-overlay" class="grid-overlay hidden"></div>
-    
-    <div id="landing-container" class="landing-container">
-        <div id="background" class="background-layer"></div>
-        <div id="dusk-overlay" class="dusk-layer"></div>
-        
-        <img id="cottage-small" 
-             src="spring cottage.png"
-             class="editable-element cottage-element"
-             data-edit-name="Cottage (small)"
-             data-edit-icon="🏠"
-             data-edit-view="normal"
-             alt="Cottage">
-        
-        <img id="cottage-zoomed" 
-             src="spring cottage.png"
-             class="editable-element cottage-element zoom-element"
-             data-edit-name="Cottage (zoomed)"
-             data-edit-icon="🔍"
-             data-edit-view="zoomed"
-             alt="Cottage zoomed">
-        
-        <img id="lights" 
-             src="spring cottage lights.png"
-             class="lights-element"
-             alt="Cottage lights">
-        
-        <div id="solena-orb" 
-             class="editable-element orb-element"
-             data-edit-name="Solena Orb"
-             data-edit-icon="✨"
-             data-edit-view="normal">
+  </div>
+
+  <!-- Solena chat -->
+  <div id="solena-chat" class="chat-overlay hidden">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-orb-small"></div>
+        <h2>Solena</h2>
+        <button id="close-chat" class="close-chat-btn">✕</button>
+      </div>
+
+      <div id="chat-messages" class="chat-messages">
+        <div class="message solena-message">
+          <div class="message-bubble">
+            Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
+          </div>
         </div>
+      </div>
+
+      <div class="chat-input-container">
+        <button id="voice-input-btn" class="voice-btn">🎤</button>
+        <input type="text" id="chat-input" placeholder="Type your message..." />
+        <button id="send-btn" class="send-btn">Send</button>
+      </div>
     </div>
-    
-    <div id="solena-chat" class="chat-overlay hidden">
-        <div class="chat-container">
-            <div class="chat-header">
-                <div class="chat-orb-small"></div>
-                <h2>Solena</h2>
-                <button id="close-chat" class="close-chat-btn">✕</button>
-            </div>
-            
-            <div id="chat-messages" class="chat-messages">
-                <div class="message solena-message">
-                    <div class="message-bubble">
-                        Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
-                    </div>
-                </div>
-            </div>
-            
-            <div class="chat-input-container">
-                <button id="voice-input-btn" class="voice-btn">🎤</button>
-                <input type="text" id="chat-input" placeholder="Type your message..." />
-                <button id="send-btn" class="send-btn">Send</button>
-            </div>
+  </div>
+
+  <!-- Tailor overlay -->
+  <div id="tailorOverlay" style="
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(8px);
+      z-index: 4000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+  ">
+    <div style="
+        width: min(920px, 100%);
+        max-height: 90vh;
+        overflow: auto;
+        background: rgba(255,255,255,0.98);
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        padding: 16px;
+        font-family: Georgia, serif;
+    ">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+        <div style="font-size:22px; font-weight:bold;">🧵 Tailor (V0)</div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
         </div>
+      </div>
+
+      <div style="font-size:13px; color:#444; line-height:1.5; margin-bottom:12px;">
+        Paste your GitHub token once (it stays on this iPad). Then paste a patch JSON. Use <b>Dry Run</b> first, then <b>Commit Patch</b>.
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
+        <label style="font-size:13px; font-weight:bold;">GitHub Token (fine-grained PAT)</label>
+        <input id="tailorToken" type="password" placeholder="Paste token here (saved locally on this iPad)"
+          style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%;" />
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="tailorSaveTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#6b4fbb; color:white; font-weight:bold; cursor:pointer;">Save Token</button>
+          <button id="tailorClearTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#999; color:white; font-weight:bold; cursor:pointer;">Clear Token</button>
+          <div id="tailorTokenStatus" style="align-self:center; font-size:13px; color:#555;"></div>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
+        <label style="font-size:13px; font-weight:bold;">Patch JSON</label>
+        <textarea id="tailorPatch" rows="10" placeholder='Example:
+{
+  "owner": "twomoonsonesky",
+  "repo": "Twomoonsstudio",
+  "branch": "main",
+  "filePath": "app.js",
+  "find": "setInterval(checkTimeAndSetMode, 3600000);",
+  "replace": "setInterval(checkTimeAndSetMode, 60 * 1000);",
+  "commitMessage": "Tailor patch: update interval"
+}'
+          style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button id="tailorDryRunBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">Dry Run</button>
+          <button id="tailorCommitBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#16a34a; color:white; font-weight:bold; cursor:pointer;">Commit Patch</button>
+        </div>
+      </div>
+
+      <div style="font-size:12px; color:#444; margin-bottom:6px;"><b>Result</b></div>
+      <pre id="tailorResult" style="
+          white-space: pre-wrap;
+          background: rgba(0,0,0,0.06);
+          padding: 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          line-height: 1.4;
+          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+          min-height: 80px;
+      "></pre>
     </div>
-    
-    <script type="module" src="app.js?v=3"></script>
+  </div>
+
+  <script type="module" src="app.js?v=4"></script>
 </body>
 </html>
