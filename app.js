@@ -377,3 +377,11 @@ function initStorageTest() {
     }
   });
 }
+// ---- Boot Two Moons Tools (Layout + Tailor) ----
+document.addEventListener('DOMContentLoaded', () => {
+  const twoMoonsCtx = {};
+
+  if (typeof window.initTwoMoonsTools === 'function') {
+    window.initTwoMoonsTools(twoMoonsCtx);
+  }
+});

@@ -1,463 +1,791 @@
 // tools.js
 // Two Moons Toolbelt
 // - Edit menu controller
-// - Layout editor (placeholder toggle)
-// - Tailor (GitHub patcher + function finder + editable replacement UI)
+// - FULL Layout editor (drag + pinch resize + info panel + save/close)
+// - Tailor (token + patcher + function viewer + editable replacement UI)
 
-window.initTwoMoonsTools = function initTwoMoonsTools(ctx = {}) {
-  initEditMenu(ctx);
-  initLayoutEditor(ctx);
-  initTailor(ctx);
-};
+(() => {
+  // ------------------------------------------------------------
+  // Public entrypoint (app.js can call this with ctx)
+  // ------------------------------------------------------------
+  window.initTwoMoonsTools = function initTwoMoonsTools(ctx = {}) {
+    try { initEditMenu(ctx); } catch (e) { console.warn('initEditMenu failed', e); }
+    try { initLayoutEditor(ctx); } catch (e) { console.warn('initLayoutEditor failed', e); }
+    try { initTailor(ctx); } catch (e) { console.warn('initTailor failed', e); }
+  };
 
-// ------------------------------------------------------------
-// Edit Menu
-// ------------------------------------------------------------
-function initEditMenu(ctx) {
-  const editBtn = document.getElementById('editModeBtn');
-  const menu = document.getElementById('editMenu');
-  const layoutOption = document.getElementById('editLayoutOption');
-  const codeOption = document.getElementById('editCodeOption');
-  const tailorOverlay = document.getElementById('tailorOverlay');
-
-  function closeMenu() {
-    menu?.classList.add('hidden');
-  }
-
-  editBtn?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    menu?.classList.toggle('hidden');
+  // Optional auto-init (safe): only runs if page has the Edit button.
+  document.addEventListener('DOMContentLoaded', () => {
+    const hasEdit = document.getElementById('editModeBtn');
+    if (!hasEdit) return;
+    // If app.js already calls initTwoMoonsTools, this won’t hurt; functions are idempotent-ish.
+    if (!window.__TWO_MOONS_TOOLS_INIT__) {
+      window.__TWO_MOONS_TOOLS_INIT__ = true;
+      window.initTwoMoonsTools(window.__TWO_MOONS_CTX__ || {});
+    }
   });
 
-  layoutOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeMenu();
-    window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
-  });
+  // ------------------------------------------------------------
+  // Edit Menu
+  // ------------------------------------------------------------
+  function initEditMenu(ctx) {
+    const editBtn = document.getElementById('editModeBtn');
+    const menu = document.getElementById('editMenu');
+    const layoutOption = document.getElementById('editLayoutOption');
+    const codeOption = document.getElementById('editCodeOption');
+    const tailorOverlay = document.getElementById('tailorOverlay');
 
-  codeOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    closeMenu();
-    if (tailorOverlay) tailorOverlay.style.display = 'flex';
-  });
-
-  document.addEventListener('click', closeMenu);
-}
-
-// ------------------------------------------------------------
-// Layout Editor (minimal placeholder; your real logic may live elsewhere)
-// ------------------------------------------------------------
-function initLayoutEditor(ctx) {
-  const grid = document.getElementById('grid-overlay');
-  const layoutInfo = document.getElementById('layoutInfo');
-  const editBtn = document.getElementById('editModeBtn');
-
-  let isEditMode = false;
-
-  function enterEditMode() {
-    isEditMode = true;
-    if (editBtn) editBtn.textContent = 'Editing...';
-    grid?.classList.remove('hidden');
-    layoutInfo?.classList.remove('hidden');
-  }
-
-  function exitEditMode() {
-    isEditMode = false;
-    if (editBtn) editBtn.textContent = 'Edit';
-    grid?.classList.add('hidden');
-    layoutInfo?.classList.add('hidden');
-  }
-
-  function toggle() {
-    isEditMode ? exitEditMode() : enterEditMode();
-  }
-
-  window.__TWO_MOONS_LAYOUT_EDITOR__ = { toggle };
-}
-
-// ------------------------------------------------------------
-// Tailor System (PATCHER + FUNCTION FINDER)
-// ------------------------------------------------------------
-function initTailor(ctx) {
-  // Overlay + controls
-  const overlay = document.getElementById('tailorOverlay');
-  const closeBtn = document.getElementById('tailorCloseBtn');
-
-  const tokenInput = document.getElementById('tailorToken');
-  const saveTokenBtn = document.getElementById('tailorSaveTokenBtn');
-  const clearTokenBtn = document.getElementById('tailorClearTokenBtn');
-  const status = document.getElementById('tailorTokenStatus');
-
-  const patchArea = document.getElementById('tailorPatch');
-  const dryRunBtn = document.getElementById('tailorDryRunBtn');
-  const commitBtn = document.getElementById('tailorCommitBtn');
-  const resultBox = document.getElementById('tailorResult');
-
-  // Function finder UI
-  const functionOutput = document.getElementById('tailor-output');
-  const fileSelect = document.getElementById('tailor-file');
-  const functionBtn = document.getElementById('tailor-go');
-
-  if (!overlay || !patchArea || !resultBox) return;
-
-  // ---------- helpers ----------
-  const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
-
-  function setResult(text) {
-    resultBox.textContent = String(text ?? '');
-  }
-
-  function loadTokenFromLocal() {
-    const t = localStorage.getItem(STORAGE_KEY);
-    if (t) {
-      if (status) status.textContent = '✅ Token saved on this iPad';
-      if (tokenInput) tokenInput.value = t;
-    } else {
-      if (status) status.textContent = 'No token saved yet.';
-      if (tokenInput) tokenInput.value = '';
-    }
-  }
-
-  function requireToken() {
-    const t = (tokenInput?.value || '').trim();
-    if (!t) throw new Error('No token. Paste token, press Save Token.');
-    return t;
-  }
-
-  function parsePatch() {
-    const raw = (patchArea.value || '').trim();
-    if (!raw) throw new Error('Paste a patch JSON first.');
-    let obj;
-    try {
-      obj = JSON.parse(raw);
-    } catch {
-      throw new Error('Patch JSON is not valid JSON. (Missing comma / bracket).');
+    function closeMenu() {
+      menu?.classList.add('hidden');
     }
 
-    const required = ['owner', 'repo', 'branch', 'filePath', 'find', 'replace', 'commitMessage'];
-    for (const k of required) {
-      if (!obj[k] || typeof obj[k] !== 'string') {
-        throw new Error(`Patch missing "${k}" (must be a string).`);
-      }
-    }
-    return obj;
-  }
-
-  async function ghRequest(token, url, options = {}) {
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${token}`,
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(options.headers || {}),
-      },
+    editBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      menu?.classList.toggle('hidden');
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`GitHub error ${res.status}: ${text}`);
-    }
-    return res.json();
+    layoutOption?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+      window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
+    });
+
+    codeOption?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeMenu();
+      if (tailorOverlay) tailorOverlay.style.display = 'flex';
+    });
+
+    document.addEventListener('click', closeMenu);
   }
 
-  async function getFileContent(token, owner, repo, path, refName) {
-    const url =
-      `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}` +
-      `?ref=${encodeURIComponent(refName)}`;
+  // ------------------------------------------------------------
+  // Layout Editor (FULL)
+  // ------------------------------------------------------------
+  function initLayoutEditor(ctx) {
+    const grid = document.getElementById('grid-overlay');
+    const layoutInfo = document.getElementById('layoutInfo');
+    const editBtn = document.getElementById('editModeBtn');
+    const container = document.getElementById('landing-container');
 
-    const data = await ghRequest(token, url);
-    if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
+    if (!editBtn || !container) return;
 
-    const decoded = atob(String(data.content).replace(/\n/g, ''));
-    return { decoded, sha: data.sha };
-  }
+    // ctx hooks (optional). If not provided, we still edit in-memory layouts.
+    // Expected (optional):
+    // - ctx.getCurrentLayout(): returns current layout object
+    // - ctx.applyLayout(): re-apply layout to DOM
+    // - ctx.syncLights(cottageId): keep lights aligned
+    // - ctx.saveLayoutToFirebase(): persist layouts
+    // - ctx.getOrientationMeta(): {orientationName, orientationIcon}
+    // - ctx.getViewMeta(): {viewName, viewIcon}
+    // - ctx.isZoomed(): boolean
+    const getCurrentLayout = () =>
+      (typeof ctx.getCurrentLayout === 'function')
+        ? ctx.getCurrentLayout()
+        : (window.getCurrentLayout ? window.getCurrentLayout() : null);
 
-  function applyReplace(sourceText, find, replace) {
-    const count = sourceText.split(find).length - 1;
-    if (count <= 0) return { updated: sourceText, count: 0 };
-    return { updated: sourceText.split(find).join(replace), count };
-  }
-
-  function b64utf8(str) {
-    return btoa(unescape(encodeURIComponent(str)));
-  }
-
-  async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
-    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
-    const body = {
-      message,
-      content: b64utf8(newText),
-      sha,
-      branch,
+    const applyLayout = () => {
+      if (typeof ctx.applyLayout === 'function') return ctx.applyLayout();
+      if (typeof window.applyLayout === 'function') return window.applyLayout();
     };
 
-    return ghRequest(token, url, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    });
-  }
+    const syncLights = (cottageId) => {
+      if (typeof ctx.syncLights === 'function') return ctx.syncLights(cottageId);
+      if (typeof window.syncLights === 'function') return window.syncLights(cottageId);
+    };
 
-  // ---------- overlay close ----------
-  closeBtn?.addEventListener('click', () => {
-    overlay.style.display = 'none';
-  });
+    const saveLayoutToFirebase = async () => {
+      if (typeof ctx.saveLayoutToFirebase === 'function') return ctx.saveLayoutToFirebase();
+      if (typeof window.saveLayoutToFirebase === 'function') return window.saveLayoutToFirebase();
+      throw new Error('No saveLayoutToFirebase hook found.');
+    };
 
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) overlay.style.display = 'none';
-  });
+    const isZoomed = () => {
+      if (typeof ctx.isZoomed === 'function') return !!ctx.isZoomed();
+      if (typeof window.isCottageZoomed !== 'undefined') return !!window.isCottageZoomed;
+      return false;
+    };
 
-  // ---------- token buttons ----------
-  saveTokenBtn?.addEventListener('click', () => {
-    const t = (tokenInput?.value || '').trim();
-    if (!t) {
-      if (status) status.textContent = 'Paste token first.';
-      return;
+    let isEditMode = false;
+
+    // drag / pinch state
+    let dragElement = null;
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
+
+    let resizeElement = null;
+    let initialSize = 0;
+    let initialDistance = 0;
+
+    function enterEditMode() {
+      isEditMode = true;
+
+      editBtn.classList.add('active');
+      editBtn.textContent = 'Editing...';
+
+      grid?.classList.remove('hidden');
+      layoutInfo?.classList.remove('hidden');
+
+      updateLayoutInfo();
+      makeElementsEditable();
     }
-    localStorage.setItem(STORAGE_KEY, t);
-    if (status) status.textContent = '✅ Token saved on this iPad';
-    setResult('Token saved.');
-  });
 
-  clearTokenBtn?.addEventListener('click', () => {
-    localStorage.removeItem(STORAGE_KEY);
-    if (tokenInput) tokenInput.value = '';
-    if (status) status.textContent = 'Token cleared.';
-    setResult('Token cleared.');
-  });
+    function exitEditMode() {
+      isEditMode = false;
 
-  // ---------- dry run ----------
-  dryRunBtn?.addEventListener('click', async () => {
-    try {
-      setResult('Dry run…');
-      const token = requireToken();
-      const patch = parsePatch();
+      editBtn.classList.remove('active');
+      editBtn.textContent = 'Edit';
 
-      const { decoded } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+      grid?.classList.add('hidden');
+      layoutInfo?.classList.add('hidden');
 
-      if (count === 0) {
-        setResult(
-          `❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: Make sure "find" matches the current code EXACTLY.`
-        );
+      removeEditListeners();
+    }
+
+    function toggle() {
+      isEditMode ? exitEditMode() : enterEditMode();
+    }
+
+    window.__TWO_MOONS_LAYOUT_EDITOR__ = { toggle };
+
+    function makeElementsEditable() {
+      const editables = document.querySelectorAll('.editable-element');
+
+      editables.forEach((element) => {
+        const view = element.dataset.editView; // "normal" or "zoomed"
+        const zoomedNow = isZoomed();
+
+        // Hide edit-mode on elements not relevant to current view
+        if (view === 'zoomed' && !zoomedNow) {
+          element.classList.remove('edit-mode');
+          return;
+        }
+        if (view === 'normal' && zoomedNow && element.classList.contains('cottage-element')) {
+          element.classList.remove('edit-mode');
+          return;
+        }
+
+        element.classList.add('edit-mode');
+
+        element.removeEventListener('touchstart', onDragStart);
+        element.removeEventListener('touchmove', onDragMove);
+        element.removeEventListener('touchend', onDragEnd);
+
+        element.addEventListener('touchstart', onDragStart, { passive: false });
+        element.addEventListener('touchmove', onDragMove, { passive: false });
+        element.addEventListener('touchend', onDragEnd, { passive: false });
+      });
+    }
+
+    function removeEditListeners() {
+      const editables = document.querySelectorAll('.editable-element');
+      editables.forEach((element) => {
+        element.classList.remove('edit-mode');
+        element.removeEventListener('touchstart', onDragStart);
+        element.removeEventListener('touchmove', onDragMove);
+        element.removeEventListener('touchend', onDragEnd);
+      });
+    }
+
+    function onDragStart(e) {
+      if (!isEditMode) return;
+
+      // one finger drag
+      if (e.touches.length === 1) {
+        e.preventDefault();
+        dragElement = e.target.closest('.editable-element');
+        if (!dragElement) return;
+
+        const touch = e.touches[0];
+        const rect = dragElement.getBoundingClientRect();
+
+        dragOffsetX = touch.clientX - rect.left;
+        dragOffsetY = touch.clientY - rect.top;
+      }
+
+      // two finger pinch resize
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        resizeElement = e.target.closest('.editable-element');
+        if (!resizeElement) return;
+
+        const [t1, t2] = e.touches;
+        initialDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+        const rect = resizeElement.getBoundingClientRect();
+        initialSize = rect.width;
+      }
+    }
+
+    function onDragMove(e) {
+      if (!isEditMode) return;
+
+      // drag
+      if (dragElement && e.touches.length === 1) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const containerRect = container.getBoundingClientRect();
+
+        let newLeft = touch.clientX - containerRect.left - dragOffsetX;
+        let newTop = touch.clientY - containerRect.top - dragOffsetY;
+
+        const elementWidth = dragElement.offsetWidth;
+        const elementHeight = dragElement.offsetHeight;
+
+        newLeft = Math.max(0, Math.min(containerRect.width - elementWidth, newLeft));
+        newTop = Math.max(0, Math.min(containerRect.height - elementHeight, newTop));
+
+        dragElement.style.left = `${newLeft}px`;
+        dragElement.style.top = `${newTop}px`;
+
+        if (dragElement.id === 'cottage-small' || dragElement.id === 'cottage-zoomed') {
+          syncLights(dragElement.id);
+        }
+
+        updateLayoutInfo();
         return;
       }
 
-      setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
-    } catch (e) {
-      setResult('❌ ' + (e?.message || e));
+      // pinch resize
+      if (resizeElement && e.touches.length === 2) {
+        e.preventDefault();
+        const [t1, t2] = e.touches;
+        const currentDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+
+        const scale = currentDistance / initialDistance;
+        let newSize = initialSize * scale;
+
+        newSize = Math.max(50, Math.min(container.clientWidth * 0.95, newSize));
+
+        resizeElement.style.width = `${newSize}px`;
+
+        // orbs: square
+        if (resizeElement.classList.contains('orb-element')) {
+          resizeElement.style.height = `${newSize}px`;
+        } else {
+          resizeElement.style.height = 'auto';
+        }
+
+        if (resizeElement.id === 'cottage-small' || resizeElement.id === 'cottage-zoomed') {
+          syncLights(resizeElement.id);
+        }
+
+        updateLayoutInfo();
+      }
     }
-  });
 
-  // ---------- commit ----------
-  commitBtn?.addEventListener('click', async () => {
-    try {
-      setResult('Committing patch…');
-      const token = requireToken();
-      const patch = parsePatch();
+    function onDragEnd() {
+      if (dragElement) {
+        saveElementPosition(dragElement);
+        dragElement = null;
+      }
+      if (resizeElement) {
+        saveElementPosition(resizeElement);
+        resizeElement = null;
+      }
+    }
 
-      const { decoded, sha } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-      const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+    function saveElementPosition(element) {
+      const layout = getCurrentLayout();
+      if (!layout) return;
 
-      if (count === 0) {
-        setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
+      const containerRect = container.getBoundingClientRect();
+      const rect = element.getBoundingClientRect();
+
+      const left = ((rect.left - containerRect.left) / containerRect.width) * 100;
+      const top = ((rect.top - containerRect.top) / containerRect.height) * 100;
+      const width = (rect.width / containerRect.width) * 100;
+
+      if (element.classList.contains('orb-element')) {
+        layout[element.id] = { left, top, size: width };
+      } else {
+        layout[element.id] = { left, top, width };
+      }
+    }
+
+    function updateLayoutInfo() {
+      if (!layoutInfo) return;
+
+      const layout = getCurrentLayout();
+      if (!layout) {
+        layoutInfo.querySelector('.layout-info-content').innerHTML =
+          `<div style="padding:12px;">Layout editor active, but no layout object found.</div>`;
         return;
       }
 
-      await putFileContent(
-        token,
-        patch.owner,
-        patch.repo,
-        patch.filePath,
-        patch.branch,
-        patch.commitMessage,
-        updated,
-        sha
-      );
+      const zoomedNow = isZoomed();
 
-      setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
-    } catch (e) {
-      setResult('❌ ' + (e?.message || e));
-    }
-  });
+      const orientationIcon =
+        (typeof ctx.getOrientationMeta === 'function')
+          ? ctx.getOrientationMeta().orientationIcon
+          : (window.innerWidth > window.innerHeight ? '🖥️' : '📱');
 
-  // ------------------------------------------------------------
-  // Function Finder
-  // ------------------------------------------------------------
-  if (!functionOutput) {
-    loadTokenFromLocal();
-    setResult('Ready.');
-    return;
-  }
+      const orientationName =
+        (typeof ctx.getOrientationMeta === 'function')
+          ? ctx.getOrientationMeta().orientationName
+          : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-  async function getFileText(file) {
-    const res = await fetch(file, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Could not fetch ${file} (HTTP ${res.status})`);
-    return await res.text();
-  }
+      const viewIcon = zoomedNow ? '🔍' : '🏠';
+      const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
-  async function getFunctionNames(file) {
-    const text = await getFileText(file);
-    const names = new Set();
+      const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
 
-    // function name(...) {
-    for (const m of text.matchAll(/function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
-      names.add(m[1] + '()');
-    }
+      let html = `
+        <div style="text-align:center; margin-bottom: 15px;">
+          <strong style="font-size: 16px;">Visual Editor</strong><br>
+          <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
+            ${orientationIcon} ${orientationName} • ${viewIcon} ${viewName}
+          </div>
+          <em style="font-size: 12px;">Drag to move • Pinch to resize</em>
+        </div>
 
-    // const name = ( ... ) OR const name = async ( ... )
-    for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
-      names.add(m[1] + '()');
-    }
+        <div style="display:flex; gap:8px; margin-bottom:15px;">
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">💾 Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">✕ Close</button>
+        </div>
 
-    return [...names].sort();
-  }
+        <div style="font-size: 12px; line-height: 1.8; color: #555;">
+      `;
 
-  function extractFunctionSource(text, funcName) {
-    const regex = new RegExp(`function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`, 'm');
-    const match = text.match(regex);
-    if (!match) return null;
+      currentViewElements.forEach((el) => {
+        const name = el.dataset.editName || el.id;
+        const icon = el.dataset.editIcon || '📦';
+        const config = layout[el.id];
 
-    const startIndex = match.index;
-    const braceIndex = text.indexOf('{', startIndex);
+        if (!config) return;
 
-    let depth = 0;
-    for (let i = braceIndex; i < text.length; i++) {
-      if (text[i] === '{') depth++;
-      if (text[i] === '}') depth--;
-      if (depth === 0) return text.slice(startIndex, i + 1);
-    }
-    return null;
-  }
-
-  async function renderFunctionList(file) {
-    functionOutput.innerHTML = '';
-    const names = await getFunctionNames(file);
-
-    if (!names.length) {
-      functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
-      return;
-    }
-
-    names.forEach((displayName) => {
-      const div = document.createElement('div');
-      div.textContent = displayName;
-      div.style.cursor = 'pointer';
-      div.style.padding = '6px 0';
-      div.style.textDecoration = 'underline';
-
-      div.addEventListener('click', async () => {
-        await renderFunctionDetail(file, displayName);
+        html += `<strong>${icon} ${name}</strong><br>`;
+        html += `Position: ${Number(config.left).toFixed(1)}%, ${Number(config.top).toFixed(1)}%<br>`;
+        if (config.size !== undefined) html += `Size: ${Number(config.size).toFixed(1)}%<br><br>`;
+        else html += `Width: ${Number(config.width).toFixed(1)}%<br><br>`;
       });
 
-      functionOutput.appendChild(div);
-    });
+      html += `</div>`;
+
+      layoutInfo.querySelector('.layout-info-content').innerHTML = html;
+
+      // wire buttons (each refresh rebuilds DOM)
+      const saveBtn = document.getElementById('__tm_save_btn');
+      const closeBtn = document.getElementById('__tm_close_btn');
+
+      saveBtn?.addEventListener('click', async () => {
+        try {
+          await saveLayoutToFirebase();
+          alert('✅ Layout saved!');
+        } catch (e) {
+          alert('❌ Could not save: ' + (e?.message || e));
+        }
+        exitEditMode();
+      });
+
+      closeBtn?.addEventListener('click', () => {
+        // revert by reapplying layout from current stored values
+        try { applyLayout(); } catch {}
+        exitEditMode();
+      });
+    }
   }
 
-  async function renderFunctionDetail(file, displayName) {
-    functionOutput.innerHTML = '';
+  // ------------------------------------------------------------
+  // Tailor System (token + patch + function viewer)
+  // ------------------------------------------------------------
+  function initTailor(ctx) {
+    const overlay = document.getElementById('tailorOverlay');
+    const closeBtn = document.getElementById('tailorCloseBtn');
 
-    const text = await getFileText(file);
-    const funcName = displayName.replace(/\(\)$/, '');
-    const source = extractFunctionSource(text, funcName);
+    const tokenInput = document.getElementById('tailorToken');
+    const saveTokenBtn = document.getElementById('tailorSaveTokenBtn');
+    const clearTokenBtn = document.getElementById('tailorClearTokenBtn');
+    const status = document.getElementById('tailorTokenStatus');
 
-    if (!source) {
-      functionOutput.innerHTML = 'Could not locate function.';
+    const patchArea = document.getElementById('tailorPatch');
+    const dryRunBtn = document.getElementById('tailorDryRunBtn');
+    const commitBtn = document.getElementById('tailorCommitBtn');
+    const result = document.getElementById('tailorResult');
+
+    const functionOutput = document.getElementById('tailor-output');
+    const fileSelect = document.getElementById('tailor-file');
+    const functionBtn = document.getElementById('tailor-go');
+
+    if (!overlay || !result) return;
+
+    const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
+
+    function setResult(text) {
+      result.textContent = text;
+    }
+
+    function loadTokenFromLocal() {
+      const t = localStorage.getItem(STORAGE_KEY);
+      if (t) {
+        status && (status.textContent = '✅ Token saved on this iPad');
+        if (tokenInput) tokenInput.value = t;
+      } else {
+        status && (status.textContent = 'No token saved yet.');
+        if (tokenInput) tokenInput.value = '';
+      }
+    }
+
+    function requireToken() {
+      const t = (tokenInput?.value || '').trim();
+      if (!t) throw new Error('No token. Paste token, press Save Token.');
+      return t;
+    }
+
+    function parsePatch() {
+      const raw = (patchArea?.value || '').trim();
+      if (!raw) throw new Error('Paste a patch JSON first.');
+      let obj;
+      try { obj = JSON.parse(raw); }
+      catch { throw new Error('Patch JSON is not valid JSON. (Missing comma / bracket).'); }
+
+      const required = ['owner', 'repo', 'branch', 'filePath', 'find', 'replace', 'commitMessage'];
+      for (const k of required) {
+        if (!obj[k] || typeof obj[k] !== 'string') throw new Error(`Patch missing "${k}" (must be a string).`);
+      }
+      return obj;
+    }
+
+    async function ghRequest(token, url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': `Bearer ${token}`,
+          'X-GitHub-Api-Version': '2022-11-28',
+          ...(options.headers || {})
+        }
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`GitHub error ${res.status}: ${text}`);
+      }
+      return res.json();
+    }
+
+    async function getFileContent(token, owner, repo, path, refName) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(refName)}`;
+      const data = await ghRequest(token, url);
+      if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
+      const decoded = atob(data.content.replace(/\n/g, ''));
+      return { decoded, sha: data.sha };
+    }
+
+    function applyReplace(sourceText, find, replace) {
+      const count = sourceText.split(find).length - 1;
+      if (count <= 0) return { updated: sourceText, count: 0 };
+      return { updated: sourceText.split(find).join(replace), count };
+    }
+
+    async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const body = {
+        message,
+        content: btoa(unescape(encodeURIComponent(newText))),
+        sha,
+        branch
+      };
+      return ghRequest(token, url, {
+        method: 'PUT',
+        body: JSON.stringify(body)
+      });
+    }
+
+    // Close overlay
+    closeBtn?.addEventListener('click', () => {
+      overlay.style.display = 'none';
+    });
+
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) overlay.style.display = 'none';
+    });
+
+    // Token buttons
+    saveTokenBtn?.addEventListener('click', () => {
+      const t = (tokenInput?.value || '').trim();
+      if (!t) {
+        status && (status.textContent = 'Paste token first.');
+        return;
+      }
+      localStorage.setItem(STORAGE_KEY, t);
+      status && (status.textContent = '✅ Token saved on this iPad');
+      setResult('Token saved.');
+    });
+
+    clearTokenBtn?.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      if (tokenInput) tokenInput.value = '';
+      status && (status.textContent = 'Token cleared.');
+      setResult('Token cleared.');
+    });
+
+    // Patch buttons
+    dryRunBtn?.addEventListener('click', async () => {
+      try {
+        setResult('Dry run…');
+        const token = requireToken();
+        const patch = parsePatch();
+
+        const { decoded } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+        const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+
+        if (count === 0) {
+          setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: copy/paste the EXACT text you want to replace.`);
+          return;
+        }
+
+        // sanity: updated is unused in dry run, but computed to ensure replace works
+        void updated;
+
+        setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
+      } catch (e) {
+        setResult('❌ ' + (e?.message || e));
+      }
+    });
+
+    commitBtn?.addEventListener('click', async () => {
+      try {
+        setResult('Committing patch…');
+        const token = requireToken();
+        const patch = parsePatch();
+
+        const { decoded, sha } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+        const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+
+        if (count === 0) {
+          setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
+          return;
+        }
+
+        await putFileContent(
+          token,
+          patch.owner,
+          patch.repo,
+          patch.filePath,
+          patch.branch,
+          patch.commitMessage,
+          updated,
+          sha
+        );
+
+        setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
+      } catch (e) {
+        setResult('❌ ' + (e?.message || e));
+      }
+    });
+
+    // ---------- Function viewer ----------
+    if (!functionOutput || !functionBtn) {
+      loadTokenFromLocal();
       return;
     }
 
-    // Back
-    const backBtn = document.createElement('button');
-    backBtn.textContent = '← Back';
-    backBtn.style.marginBottom = '10px';
-    backBtn.onclick = () => renderFunctionList(file);
-    functionOutput.appendChild(backBtn);
+    async function getFileText(file) {
+  const base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+  const url = base + file;
 
-    // Title
-    const title = document.createElement('div');
-    title.textContent = `${displayName} — (${file})`;
-    title.style.fontWeight = 'bold';
-    title.style.margin = '6px 0';
-    functionOutput.appendChild(title);
+  const res = await fetch(url, { cache: 'no-store' });
 
-    // Current (readonly)
-    const currentBox = document.createElement('textarea');
-    currentBox.value = source;
-    currentBox.readOnly = true;
-    currentBox.style.width = '100%';
-    currentBox.style.minHeight = '150px';
-    currentBox.style.marginBottom = '10px';
-    functionOutput.appendChild(currentBox);
-
-    // Replacement (blank by default – this fixes your “two same boxes” pain)
-    const replaceBox = document.createElement('textarea');
-    replaceBox.value = '';
-    replaceBox.placeholder = 'Paste your replacement function block here…';
-    replaceBox.style.width = '100%';
-    replaceBox.style.minHeight = '180px';
-    replaceBox.style.marginBottom = '10px';
-    functionOutput.appendChild(replaceBox);
-
-    // Copy current code button (brings back your missing copy button)
-    const copyBtn = document.createElement('button');
-    copyBtn.textContent = 'Copy current code';
-    copyBtn.style.marginRight = '8px';
-    copyBtn.onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(currentBox.value);
-        setResult('✅ Copied current function to clipboard.');
-      } catch {
-        setResult('⚠️ Copy failed (iOS sometimes blocks clipboard). You can still select+copy manually.');
-      }
-    };
-
-    // Make Patch JSON
-    const makePatchBtn = document.createElement('button');
-    makePatchBtn.textContent = 'Make Patch JSON';
-    makePatchBtn.onclick = () => {
-      const replacement = replaceBox.value.trim();
-      if (!replacement) {
-        setResult('❌ Paste replacement code into the second box first.');
-        return;
-      }
-      const patch = {
-        owner: "twomoonsonesky",
-        repo: "Twomoonsstudio",
-        branch: "main",
-        filePath: file,
-        find: currentBox.value,
-        replace: replacement,
-        commitMessage: `Tailor patch: update ${funcName}`
-      };
-      patchArea.value = JSON.stringify(patch, null, 2);
-      setResult('✅ Patch JSON generated below. Now press Dry Run.');
-    };
-
-    const btnRow = document.createElement('div');
-    btnRow.style.display = 'flex';
-    btnRow.style.gap = '8px';
-    btnRow.style.flexWrap = 'wrap';
-    btnRow.appendChild(copyBtn);
-    btnRow.appendChild(makePatchBtn);
-    functionOutput.appendChild(btnRow);
+  if (!res.ok) {
+    throw new Error(`Could not load ${file} (HTTP ${res.status})`);
   }
 
-  // Toggle button
-  let open = false;
-  functionBtn?.addEventListener('click', async () => {
-    const file = fileSelect?.value || 'app.js';
-    if (open) {
-      functionOutput.innerHTML = '';
-      functionBtn.textContent = 'Functions ▾';
-      open = false;
-    } else {
-      await renderFunctionList(file);
-      functionBtn.textContent = 'Functions ▴';
-      open = true;
-    }
-  });
-
-  // initial state
-  loadTokenFromLocal();
-  setResult('Ready.');
+  return await res.text();
 }
+
+    async function getFunctionNames(file) {
+      const text = await getFileText(file);
+      const names = new Set();
+
+      // function name(
+      for (const m of text.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
+        names.add(m[1] + '()');
+      }
+
+      // const name = (   OR const name = async (
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
+        names.add(m[1] + '()');
+      }
+
+      // const name = async function(
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
+        names.add(m[1] + '()');
+      }
+
+      return [...names].sort();
+    }
+
+    function extractFunctionSource(text, funcName) {
+      // 1) async function name(...) { ... }  OR function name(...) { ... }
+      const decl = new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`, 'm');
+      let match = text.match(decl);
+
+      // 2) const name = (...) => { ... }  OR const name = async (...) => { ... }
+      if (!match) {
+        const arrow = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm');
+        match = text.match(arrow);
+      }
+
+      // 3) const name = function(...) { ... } OR const name = async function(...) { ... }
+      if (!match) {
+        const expr = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm');
+        match = text.match(expr);
+      }
+
+      if (!match) return null;
+
+      const startIndex = match.index;
+      const braceIndex = text.indexOf('{', startIndex);
+      if (braceIndex < 0) return null;
+
+      let depth = 0;
+      for (let i = braceIndex; i < text.length; i++) {
+        if (text[i] === '{') depth++;
+        if (text[i] === '}') depth--;
+        if (depth === 0) {
+          return text.slice(startIndex, i + 1);
+        }
+      }
+      return null;
+    }
+
+    async function renderFunctionList(file) {
+      functionOutput.innerHTML = '';
+      const names = await getFunctionNames(file);
+
+      if (!names.length) {
+        functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
+        return;
+      }
+
+      names.forEach((displayName) => {
+        const div = document.createElement('div');
+        div.textContent = displayName;
+        div.style.cursor = 'pointer';
+        div.style.padding = '6px 0';
+        div.style.textDecoration = 'underline';
+
+        div.addEventListener('click', async () => {
+          await renderFunctionDetail(file, displayName);
+        });
+
+        functionOutput.appendChild(div);
+      });
+    }
+
+    async function renderFunctionDetail(file, displayName) {
+      functionOutput.innerHTML = '';
+
+      const text = await getFileText(file);
+      const funcName = displayName.replace(/\(\)$/, '');
+      const source = extractFunctionSource(text, funcName);
+
+      if (!source) {
+        functionOutput.innerHTML = 'Could not locate function.';
+        return;
+      }
+
+      // Back
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Back';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = () => renderFunctionList(file);
+      functionOutput.appendChild(backBtn);
+
+      // Title
+      const title = document.createElement('div');
+      title.textContent = `${displayName} — (${file})`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0';
+      functionOutput.appendChild(title);
+
+      // Current (readonly)
+      const currentBox = document.createElement('textarea');
+      currentBox.value = source;
+      currentBox.readOnly = true;
+      currentBox.style.width = '100%';
+      currentBox.style.minHeight = '150px';
+      currentBox.style.marginBottom = '10px';
+      functionOutput.appendChild(currentBox);
+
+      // Replacement (blank by default)
+      const replaceBox = document.createElement('textarea');
+      replaceBox.value = '';
+      replaceBox.placeholder = 'Paste your replacement function block here…';
+      replaceBox.style.width = '100%';
+      replaceBox.style.minHeight = '180px';
+      replaceBox.style.marginBottom = '10px';
+      functionOutput.appendChild(replaceBox);
+
+      // Buttons row
+      const btnRow = document.createElement('div');
+      btnRow.style.display = 'flex';
+      btnRow.style.gap = '8px';
+      btnRow.style.flexWrap = 'wrap';
+
+      const copyBtn = document.createElement('button');
+      copyBtn.textContent = 'Copy current code';
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(currentBox.value);
+          setResult('✅ Copied current function to clipboard.');
+        } catch {
+          setResult('⚠️ Copy failed (iOS sometimes blocks clipboard). You can still select+copy manually.');
+        }
+      };
+
+      const makePatchBtn = document.createElement('button');
+      makePatchBtn.textContent = 'Make Patch JSON';
+      makePatchBtn.onclick = () => {
+        const replacement = replaceBox.value.trim();
+        if (!replacement) {
+          setResult('❌ Paste replacement code into the second box first.');
+          return;
+        }
+        const patch = {
+          owner: "twomoonsonesky",
+          repo: "Twomoonsstudio",
+          branch: "main",
+          filePath: file,
+          find: currentBox.value,
+          replace: replacement,
+          commitMessage: `Tailor patch: update ${funcName}`
+        };
+        if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
+        setResult('✅ Patch JSON generated below. Now press Dry Run.');
+      };
+
+      btnRow.appendChild(copyBtn);
+      btnRow.appendChild(makePatchBtn);
+      functionOutput.appendChild(btnRow);
+    }
+
+    let open = false;
+
+    functionBtn.addEventListener('click', async () => {
+      try {
+        const file = fileSelect?.value || 'app.js';
+
+        if (open) {
+          functionOutput.innerHTML = '';
+          functionBtn.textContent = 'Functions ▾';
+          open = false;
+          return;
+        }
+
+        functionBtn.textContent = 'Loading…';
+        await renderFunctionList(file);
+        functionBtn.textContent = 'Functions ▴';
+        open = true;
+      } catch (e) {
+        functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file.</div>';
+        functionBtn.textContent = 'Functions ▾';
+        open = false;
+      }
+    });
+
+    // initial state
+    loadTokenFromLocal();
+  }
+})();
