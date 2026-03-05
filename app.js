@@ -287,7 +287,7 @@ function sendMessage() {
   chatInput.value = '';
 
   setTimeout(() => {
-    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ✨", 'solena');
+    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? â¨", 'solena');
   }, 1000);
 }
 
@@ -311,6 +311,16 @@ function initApp() {
   const orb = document.getElementById('solena-orb');
   const chatOverlay = document.getElementById('solena-chat');
 
+  function isLayoutEditing() {
+    return !!document.querySelector('.editable-element.edit-mode');
+  }
+
+  function isHotspotClick(target) {
+    // Future-proof: when we add hotspots, give them class="hotspot"
+    // or data-hotspot="true" so they don't trigger unzoom.
+    return !!target.closest?.('.hotspot, [data-hotspot="true"]');
+  }
+
   function checkTimeAndSetMode() {
     const now = new Date();
     const hour = now.getHours();
@@ -322,30 +332,37 @@ function initApp() {
     updateLightsVisibility();
   }
 
+  // Tap small cottage -> zoom (unless editing)
   cottageSmall?.addEventListener('click', function (e) {
-    // if layout editor is on, do nothing (it handles touches)
-    if (document.querySelector('.editable-element.edit-mode')) return;
+    if (isLayoutEditing()) return;
     e.stopPropagation();
     if (!isCottageZoomed) zoomCottage();
   });
 
+  // Tap anywhere (including on the zoomed cottage) -> unzoom
+  // EXCEPT: orb/chat/hotspots, and EXCEPT while editing.
   container?.addEventListener('click', function (e) {
-    if (document.querySelector('.editable-element.edit-mode')) return;
-    if (
-      isCottageZoomed &&
-      e.target !== cottageSmall &&
-      e.target !== orb &&
-      !e.target.closest('.editable-element')
-    ) {
-      unzoomCottage();
-    }
+    if (isLayoutEditing()) return;
+    if (!isCottageZoomed) return;
+
+    const target = e.target;
+
+    // Don't unzoom if interacting with the orb or the chat overlay
+    if (target === orb || target.closest?.('#solena-orb')) return;
+    if (target.closest?.('#solena-chat')) return;
+
+    // Don't unzoom if clicking a hotspot (we'll add these later)
+    if (isHotspotClick(target)) return;
+
+    unzoomCottage();
   });
 
+  // Orb opens chat (unless editing)
   orb?.addEventListener('click', function (e) {
-    if (document.querySelector('.editable-element.edit-mode')) return;
+    if (isLayoutEditing()) return;
     e.stopPropagation();
-    chatOverlay.classList.remove('hidden');
-    setTimeout(() => chatOverlay.classList.add('active'), 10);
+    chatOverlay?.classList.remove('hidden');
+    setTimeout(() => chatOverlay?.classList.add('active'), 10);
   });
 
   checkTimeAndSetMode();
@@ -368,11 +385,11 @@ function initStorageTest() {
 
       const url = await getDownloadURL(sRef);
 
-      alert('SUCCESS! ✅ Firebase Storage is working!\n\nFile URL: ' + url);
+      alert('SUCCESS! â Firebase Storage is working!\n\nFile URL: ' + url);
       console.log('File URL:', url);
 
     } catch (error) {
-      alert('ERROR ❌: ' + error.message);
+      alert('ERROR â: ' + error.message);
       console.error('Firebase Storage error:', error);
     }
   });
