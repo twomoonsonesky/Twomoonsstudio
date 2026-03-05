@@ -18,7 +18,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     const hasEdit = document.getElementById('editModeBtn');
     if (!hasEdit) return;
-    // If app.js already calls initTwoMoonsTools, this won’t hurt; functions are idempotent-ish.
     if (!window.__TWO_MOONS_TOOLS_INIT__) {
       window.__TWO_MOONS_TOOLS_INIT__ = true;
       window.initTwoMoonsTools(window.__TWO_MOONS_CTX__ || {});
@@ -70,15 +69,6 @@
 
     if (!editBtn || !container) return;
 
-    // ctx hooks (optional). If not provided, we still edit in-memory layouts.
-    // Expected (optional):
-    // - ctx.getCurrentLayout(): returns current layout object
-    // - ctx.applyLayout(): re-apply layout to DOM
-    // - ctx.syncLights(cottageId): keep lights aligned
-    // - ctx.saveLayoutToFirebase(): persist layouts
-    // - ctx.getOrientationMeta(): {orientationName, orientationIcon}
-    // - ctx.getViewMeta(): {viewName, viewIcon}
-    // - ctx.isZoomed(): boolean
     const getCurrentLayout = () =>
       (typeof ctx.getCurrentLayout === 'function')
         ? ctx.getCurrentLayout()
@@ -108,7 +98,6 @@
 
     let isEditMode = false;
 
-    // drag / pinch state
     let dragElement = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
@@ -155,7 +144,6 @@
         const view = element.dataset.editView; // "normal" or "zoomed"
         const zoomedNow = isZoomed();
 
-        // Hide edit-mode on elements not relevant to current view
         if (view === 'zoomed' && !zoomedNow) {
           element.classList.remove('edit-mode');
           return;
@@ -190,7 +178,6 @@
     function onDragStart(e) {
       if (!isEditMode) return;
 
-      // one finger drag
       if (e.touches.length === 1) {
         e.preventDefault();
         dragElement = e.target.closest('.editable-element');
@@ -203,7 +190,6 @@
         dragOffsetY = touch.clientY - rect.top;
       }
 
-      // two finger pinch resize
       if (e.touches.length === 2) {
         e.preventDefault();
         resizeElement = e.target.closest('.editable-element');
@@ -220,7 +206,6 @@
     function onDragMove(e) {
       if (!isEditMode) return;
 
-      // drag
       if (dragElement && e.touches.length === 1) {
         e.preventDefault();
         const touch = e.touches[0];
@@ -246,7 +231,6 @@
         return;
       }
 
-      // pinch resize
       if (resizeElement && e.touches.length === 2) {
         e.preventDefault();
         const [t1, t2] = e.touches;
@@ -259,7 +243,6 @@
 
         resizeElement.style.width = `${newSize}px`;
 
-        // orbs: square
         if (resizeElement.classList.contains('orb-element')) {
           resizeElement.style.height = `${newSize}px`;
         } else {
@@ -364,7 +347,6 @@
 
       layoutInfo.querySelector('.layout-info-content').innerHTML = html;
 
-      // wire buttons (each refresh rebuilds DOM)
       const saveBtn = document.getElementById('__tm_save_btn');
       const closeBtn = document.getElementById('__tm_close_btn');
 
@@ -379,7 +361,6 @@
       });
 
       closeBtn?.addEventListener('click', () => {
-        // revert by reapplying layout from current stored values
         try { applyLayout(); } catch {}
         exitEditMode();
       });
@@ -408,6 +389,13 @@
     const functionBtn = document.getElementById('tailor-go');
 
     if (!overlay || !result) return;
+
+    // ✅ Single source of truth for Function Finder
+    const GH_DEFAULTS = {
+      owner: "twomoonsonesky",
+      repo: "Twomoonsstudio",
+      branch: "main",
+    };
 
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
@@ -446,6 +434,14 @@
       return obj;
     }
 
+    // Encode path safely while keeping slashes
+    function ghPath(path) {
+      return String(path)
+        .split('/')
+        .map(seg => encodeURIComponent(seg))
+        .join('/');
+    }
+
     async function ghRequest(token, url, options = {}) {
       const res = await fetch(url, {
         ...options,
@@ -465,7 +461,7 @@
     }
 
     async function getFileContent(token, owner, repo, path, refName) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(refName)}`;
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
       const data = await ghRequest(token, url);
       if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
       const decoded = atob(data.content.replace(/\n/g, ''));
@@ -473,13 +469,18 @@
     }
 
     function applyReplace(sourceText, find, replace) {
-      const count = sourceText.split(find).length - 1;
+      // Normalize line endings to reduce false "not found" errors
+      const S = sourceText.replace(/\r\n/g, '\n');
+      const F = find.replace(/\r\n/g, '\n');
+      const R = replace.replace(/\r\n/g, '\n');
+
+      const count = S.split(F).length - 1;
       if (count <= 0) return { updated: sourceText, count: 0 };
-      return { updated: sourceText.split(find).join(replace), count };
+      return { updated: S.split(F).join(R), count };
     }
 
     async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`;
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}`;
       const body = {
         message,
         content: btoa(unescape(encodeURIComponent(newText))),
@@ -531,13 +532,11 @@
         const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
 
         if (count === 0) {
-          setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: copy/paste the EXACT text you want to replace.`);
+          setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
           return;
         }
 
-        // sanity: updated is unused in dry run, but computed to ensure replace works
         void updated;
-
         setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
       } catch (e) {
         setResult('❌ ' + (e?.message || e));
@@ -581,34 +580,31 @@
       return;
     }
 
+    // ✅ NOW reads from GitHub, not local preview
     async function getFileText(file) {
-  const base = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
-  const url = base + file;
-
-  const res = await fetch(url, { cache: 'no-store' });
-
-  if (!res.ok) {
-    throw new Error(`Could not load ${file} (HTTP ${res.status})`);
-  }
-
-  return await res.text();
-}
+      const token = requireToken();
+      const { decoded } = await getFileContent(
+        token,
+        GH_DEFAULTS.owner,
+        GH_DEFAULTS.repo,
+        file,
+        GH_DEFAULTS.branch
+      );
+      return decoded;
+    }
 
     async function getFunctionNames(file) {
       const text = await getFileText(file);
       const names = new Set();
 
-      // function name(
       for (const m of text.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = (   OR const name = async (
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = async function(
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
         names.add(m[1] + '()');
       }
@@ -617,17 +613,14 @@
     }
 
     function extractFunctionSource(text, funcName) {
-      // 1) async function name(...) { ... }  OR function name(...) { ... }
       const decl = new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`, 'm');
       let match = text.match(decl);
 
-      // 2) const name = (...) => { ... }  OR const name = async (...) => { ... }
       if (!match) {
         const arrow = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm');
         match = text.match(arrow);
       }
 
-      // 3) const name = function(...) { ... } OR const name = async function(...) { ... }
       if (!match) {
         const expr = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm');
         match = text.match(expr);
@@ -686,21 +679,18 @@
         return;
       }
 
-      // Back
       const backBtn = document.createElement('button');
       backBtn.textContent = '← Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderFunctionList(file);
       functionOutput.appendChild(backBtn);
 
-      // Title
       const title = document.createElement('div');
       title.textContent = `${displayName} — (${file})`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
       functionOutput.appendChild(title);
 
-      // Current (readonly)
       const currentBox = document.createElement('textarea');
       currentBox.value = source;
       currentBox.readOnly = true;
@@ -709,7 +699,6 @@
       currentBox.style.marginBottom = '10px';
       functionOutput.appendChild(currentBox);
 
-      // Replacement (blank by default)
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
       replaceBox.placeholder = 'Paste your replacement function block here…';
@@ -718,7 +707,6 @@
       replaceBox.style.marginBottom = '10px';
       functionOutput.appendChild(replaceBox);
 
-      // Buttons row
       const btnRow = document.createElement('div');
       btnRow.style.display = 'flex';
       btnRow.style.gap = '8px';
@@ -744,9 +732,9 @@
           return;
         }
         const patch = {
-          owner: "twomoonsonesky",
-          repo: "Twomoonsstudio",
-          branch: "main",
+          owner: GH_DEFAULTS.owner,
+          repo: GH_DEFAULTS.repo,
+          branch: GH_DEFAULTS.branch,
           filePath: file,
           find: currentBox.value,
           replace: replacement,
@@ -779,13 +767,12 @@
         functionBtn.textContent = 'Functions ▴';
         open = true;
       } catch (e) {
-        functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file.</div>';
+        functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file. (Is token saved?)</div>';
         functionBtn.textContent = 'Functions ▾';
         open = false;
       }
     });
 
-    // initial state
     loadTokenFromLocal();
   }
 })();
