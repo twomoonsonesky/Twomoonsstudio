@@ -287,7 +287,7 @@ function sendMessage() {
   chatInput.value = '';
 
   setTimeout(() => {
-    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂ¢ÃÂÃÂ¨", 'solena');
+    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¨", 'solena');
   }, 1000);
 }
 
@@ -322,15 +322,24 @@ function initApp() {
   }
 
   function checkTimeAndSetMode() {
-    const now = new Date();
-    const hour = now.getHours();
-    isNightNow = hour >= 19 || hour < 7;
+  const now = new Date();
+  const hour = now.getHours();
+  isNightNow = hour >= 19 || hour < 7;
 
-    if (isNightNow) dusk?.classList.add('active');
-    else dusk?.classList.remove('active');
+  if (isNightNow) dusk?.classList.add('active');
+  else dusk?.classList.remove('active');
 
-    updateLightsVisibility();
-  }
+  // Debug breadcrumb (throttled): shows once per minute max
+  try {
+    const stamp = now.toISOString().slice(0, 16); // YYYY-MM-DDTHH:MM
+    if (window.__TM_LAST_MODE_LOG__ !== stamp) {
+      window.__TM_LAST_MODE_LOG__ = stamp;
+      console.log('[Two Moons] checkTimeAndSetMode ran', stamp, 'isNightNow=', isNightNow);
+    }
+  } catch {}
+
+  updateLightsVisibility();
+}
 
   // Tap small cottage -> zoom (unless editing)
   cottageSmall?.addEventListener('click', function (e) {
@@ -385,11 +394,11 @@ function initStorageTest() {
 
       const url = await getDownloadURL(sRef);
 
-      alert('SUCCESS! ÃÂ¢ÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
+      alert('SUCCESS! ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
       console.log('File URL:', url);
 
     } catch (error) {
-      alert('ERROR ÃÂ¢ÃÂÃÂ: ' + error.message);
+      alert('ERROR ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ: ' + error.message);
       console.error('Firebase Storage error:', error);
     }
   });
