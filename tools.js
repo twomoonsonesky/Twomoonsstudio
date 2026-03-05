@@ -4,7 +4,7 @@
 // - FULL Layout editor (drag + pinch resize + info panel + save/close)
 // - Tailor (token + patcher + function viewer + editable replacement UI)
 //
-// NOTE: Tailor Function Finder now reads from GitHub (same source as Dry Run/Commit),
+// NOTE: Tailor Function Finder reads from GitHub (same source as Dry Run/Commit),
 // eliminating the "local preview vs GitHub" mismatch.
 
 (() => {
@@ -477,14 +477,20 @@
       return { decoded, sha: data.sha };
     }
 
+    function normalizeNewlines(s) {
+      return String(s).replace(/\r\n/g, '\n');
+    }
+
     function applyReplace(sourceText, find, replace) {
       // Normalize line endings to reduce false "not found"
-      const S = String(sourceText).replace(/\r\n/g, '\n');
-      const F = String(find).replace(/\r\n/g, '\n');
-      const R = String(replace).replace(/\r\n/g, '\n');
+      const S = normalizeNewlines(sourceText);
+      const F = normalizeNewlines(find);
+      const R = normalizeNewlines(replace);
 
       const count = S.split(F).length - 1;
       if (count <= 0) return { updated: sourceText, count: 0 };
+
+      // Return updated text in normalized newline form (GitHub stores LF fine)
       return { updated: S.split(F).join(R), count };
     }
 
@@ -492,12 +498,13 @@
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}`;
       const body = {
         message,
-        content: btoa(unescape(encodeURIComponent(newText))),
+        content: btoa(unescape(encodeURIComponent(String(newText)))),
         sha,
         branch
       };
       return ghRequest(token, url, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
     }
@@ -538,34 +545,48 @@
         const patch = parsePatch();
 
         const { decoded } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-        const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+        const { count } = applyReplace(decoded, patch.find, patch.replace);
 
         if (count === 0) {
           setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
           return;
         }
 
-        void updated;
         setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
       } catch (e) {
         setResult('❌ ' + (e?.message || e));
       }
     });
 
+    // ✅ COMMIT: double-fetch sha + no-op detection
     commitBtn?.addEventListener('click', async () => {
       try {
         setResult('Committing patch…');
         const token = requireToken();
         const patch = parsePatch();
 
-        const { decoded, sha } = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-        const { updated, count } = applyReplace(decoded, patch.find, patch.replace);
+        // 1) Get current content
+        const before = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+
+        // 2) Apply replace
+        const { updated, count } = applyReplace(before.decoded, patch.find, patch.replace);
 
         if (count === 0) {
           setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
           return;
         }
 
+        // 3) Fetch again RIGHT before PUT (proof/guard against sha mismatch)
+        const latest = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
+
+        // 4) If nothing changes, don't commit
+        const same = normalizeNewlines(latest.decoded) === normalizeNewlines(updated);
+        if (same) {
+          setResult(`ℹ️ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
+          return;
+        }
+
+        // 5) PUT using latest sha
         await putFileContent(
           token,
           patch.owner,
@@ -574,7 +595,7 @@
           patch.branch,
           patch.commitMessage,
           updated,
-          sha
+          latest.sha
         );
 
         setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
@@ -611,18 +632,18 @@
         names.add(m[1] + '()');
       }
 
-      // const name = (   OR const name = async (
-      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
+      // const name = function(
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = (...) => {   OR const name = async (...) => {
+      // const name = (...) =>   OR const name = async (...) =>
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = function(   OR const name = async function(
-      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
+      // const name = (   OR const name = async (   (covers some patterns)
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
         names.add(m[1] + '()');
       }
 
