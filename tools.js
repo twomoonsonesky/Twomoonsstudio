@@ -3,6 +3,9 @@
 // - Edit menu controller
 // - FULL Layout editor (drag + pinch resize + info panel + save/close)
 // - Tailor (token + patcher + function viewer + editable replacement UI)
+//
+// NOTE: Tailor Function Finder now reads from GitHub (same source as Dry Run/Commit),
+// eliminating the "local preview vs GitHub" mismatch.
 
 (() => {
   // ------------------------------------------------------------
@@ -18,6 +21,7 @@
   document.addEventListener('DOMContentLoaded', () => {
     const hasEdit = document.getElementById('editModeBtn');
     if (!hasEdit) return;
+
     if (!window.__TWO_MOONS_TOOLS_INIT__) {
       window.__TWO_MOONS_TOOLS_INIT__ = true;
       window.initTwoMoonsTools(window.__TWO_MOONS_CTX__ || {});
@@ -98,6 +102,7 @@
 
     let isEditMode = false;
 
+    // drag / pinch state
     let dragElement = null;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
@@ -144,6 +149,7 @@
         const view = element.dataset.editView; // "normal" or "zoomed"
         const zoomedNow = isZoomed();
 
+        // Hide edit-mode on elements not relevant to current view
         if (view === 'zoomed' && !zoomedNow) {
           element.classList.remove('edit-mode');
           return;
@@ -178,6 +184,7 @@
     function onDragStart(e) {
       if (!isEditMode) return;
 
+      // one finger drag
       if (e.touches.length === 1) {
         e.preventDefault();
         dragElement = e.target.closest('.editable-element');
@@ -190,6 +197,7 @@
         dragOffsetY = touch.clientY - rect.top;
       }
 
+      // two finger pinch resize
       if (e.touches.length === 2) {
         e.preventDefault();
         resizeElement = e.target.closest('.editable-element');
@@ -206,6 +214,7 @@
     function onDragMove(e) {
       if (!isEditMode) return;
 
+      // drag
       if (dragElement && e.touches.length === 1) {
         e.preventDefault();
         const touch = e.touches[0];
@@ -217,6 +226,7 @@
         const elementWidth = dragElement.offsetWidth;
         const elementHeight = dragElement.offsetHeight;
 
+        // Keep within container bounds
         newLeft = Math.max(0, Math.min(containerRect.width - elementWidth, newLeft));
         newTop = Math.max(0, Math.min(containerRect.height - elementHeight, newTop));
 
@@ -231,6 +241,7 @@
         return;
       }
 
+      // pinch resize
       if (resizeElement && e.touches.length === 2) {
         e.preventDefault();
         const [t1, t2] = e.touches;
@@ -243,6 +254,7 @@
 
         resizeElement.style.width = `${newSize}px`;
 
+        // orbs: square
         if (resizeElement.classList.contains('orb-element')) {
           resizeElement.style.height = `${newSize}px`;
         } else {
@@ -334,7 +346,6 @@
         const name = el.dataset.editName || el.id;
         const icon = el.dataset.editIcon || '📦';
         const config = layout[el.id];
-
         if (!config) return;
 
         html += `<strong>${icon} ${name}</strong><br>`;
@@ -347,6 +358,7 @@
 
       layoutInfo.querySelector('.layout-info-content').innerHTML = html;
 
+      // wire buttons
       const saveBtn = document.getElementById('__tm_save_btn');
       const closeBtn = document.getElementById('__tm_close_btn');
 
@@ -390,7 +402,7 @@
 
     if (!overlay || !result) return;
 
-    // ✅ Single source of truth for Function Finder
+    // Single source of truth for Function Finder defaults
     const GH_DEFAULTS = {
       owner: "twomoonsonesky",
       repo: "Twomoonsstudio",
@@ -434,12 +446,9 @@
       return obj;
     }
 
-    // Encode path safely while keeping slashes
+    // Encode each segment but keep slashes
     function ghPath(path) {
-      return String(path)
-        .split('/')
-        .map(seg => encodeURIComponent(seg))
-        .join('/');
+      return String(path).split('/').map(encodeURIComponent).join('/');
     }
 
     async function ghRequest(token, url, options = {}) {
@@ -469,10 +478,10 @@
     }
 
     function applyReplace(sourceText, find, replace) {
-      // Normalize line endings to reduce false "not found" errors
-      const S = sourceText.replace(/\r\n/g, '\n');
-      const F = find.replace(/\r\n/g, '\n');
-      const R = replace.replace(/\r\n/g, '\n');
+      // Normalize line endings to reduce false "not found"
+      const S = String(sourceText).replace(/\r\n/g, '\n');
+      const F = String(find).replace(/\r\n/g, '\n');
+      const R = String(replace).replace(/\r\n/g, '\n');
 
       const count = S.split(F).length - 1;
       if (count <= 0) return { updated: sourceText, count: 0 };
@@ -580,7 +589,7 @@
       return;
     }
 
-    // ✅ NOW reads from GitHub, not local preview
+    // Reads from GitHub (same source as patcher)
     async function getFileText(file) {
       const token = requireToken();
       const { decoded } = await getFileContent(
@@ -597,14 +606,22 @@
       const text = await getFileText(file);
       const names = new Set();
 
+      // function name(
       for (const m of text.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
         names.add(m[1] + '()');
       }
 
+      // const name = (   OR const name = async (
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
         names.add(m[1] + '()');
       }
 
+      // const name = (...) => {   OR const name = async (...) => {
+      for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g)) {
+        names.add(m[1] + '()');
+      }
+
+      // const name = function(   OR const name = async function(
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
         names.add(m[1] + '()');
       }
@@ -613,14 +630,17 @@
     }
 
     function extractFunctionSource(text, funcName) {
+      // 1) async function name(...) { ... }  OR function name(...) { ... }
       const decl = new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`, 'm');
       let match = text.match(decl);
 
+      // 2) const name = (...) => { ... }  OR const name = async (...) => { ... }
       if (!match) {
         const arrow = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm');
         match = text.match(arrow);
       }
 
+      // 3) const name = function(...) { ... } OR const name = async function(...) { ... }
       if (!match) {
         const expr = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm');
         match = text.match(expr);
@@ -679,18 +699,21 @@
         return;
       }
 
+      // Back
       const backBtn = document.createElement('button');
       backBtn.textContent = '← Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderFunctionList(file);
       functionOutput.appendChild(backBtn);
 
+      // Title
       const title = document.createElement('div');
       title.textContent = `${displayName} — (${file})`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
       functionOutput.appendChild(title);
 
+      // Current (readonly)
       const currentBox = document.createElement('textarea');
       currentBox.value = source;
       currentBox.readOnly = true;
@@ -699,6 +722,7 @@
       currentBox.style.marginBottom = '10px';
       functionOutput.appendChild(currentBox);
 
+      // Replacement (blank by default)
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
       replaceBox.placeholder = 'Paste your replacement function block here…';
@@ -707,6 +731,7 @@
       replaceBox.style.marginBottom = '10px';
       functionOutput.appendChild(replaceBox);
 
+      // Buttons row
       const btnRow = document.createElement('div');
       btnRow.style.display = 'flex';
       btnRow.style.gap = '8px';
@@ -773,6 +798,7 @@
       }
     });
 
+    // initial state
     loadTokenFromLocal();
   }
 })();
