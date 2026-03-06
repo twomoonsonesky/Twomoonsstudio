@@ -651,38 +651,60 @@
     }
 
     function extractFunctionSource(text, funcName) {
-      // 1) async function name(...) { ... }  OR function name(...) { ... }
-      const decl = new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`, 'm');
-      let match = text.match(decl);
+  // Find the start of the function in a few common forms.
+  const patterns = [
+    new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
+    new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm'),
+    new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
+  ];
 
-      // 2) const name = (...) => { ... }  OR const name = async (...) => { ... }
-      if (!match) {
-        const arrow = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm');
-        match = text.match(arrow);
-      }
+  let match = null;
+  for (const rx of patterns) {
+    match = text.match(rx);
+    if (match) break;
+  }
+  if (!match) return null;
 
-      // 3) const name = function(...) { ... } OR const name = async function(...) { ... }
-      if (!match) {
-        const expr = new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm');
-        match = text.match(expr);
-      }
+  const startIndex = match.index;
+  const braceIndex = text.indexOf('{', startIndex);
+  if (braceIndex < 0) return null;
 
-      if (!match) return null;
+  // Brace match, skipping strings/comments so we don’t get confused.
+  let depth = 0;
+  let inS = false, inD = false, inT = false;     // ', ", `
+  let inLine = false, inBlock = false;           // //, /* */
+  let esc = false;
 
-      const startIndex = match.index;
-      const braceIndex = text.indexOf('{', startIndex);
-      if (braceIndex < 0) return null;
+  for (let i = braceIndex; i < text.length; i++) {
+    const c = text[i];
+    const n = text[i + 1];
 
-      let depth = 0;
-      for (let i = braceIndex; i < text.length; i++) {
-        if (text[i] === '{') depth++;
-        if (text[i] === '}') depth--;
-        if (depth === 0) {
-          return text.slice(startIndex, i + 1);
-        }
-      }
-      return null;
+    if (inLine) { if (c === '\n') inLine = false; continue; }
+    if (inBlock) { if (c === '*' && n === '/') { inBlock = false; i++; } continue; }
+
+    if (!inS && !inD && !inT) {
+      if (c === '/' && n === '/') { inLine = true; i++; continue; }
+      if (c === '/' && n === '*') { inBlock = true; i++; continue; }
     }
+
+    if (inS) { if (!esc && c === "'") inS = false; esc = (!esc && c === '\\'); continue; }
+    if (inD) { if (!esc && c === '"') inD = false; esc = (!esc && c === '\\'); continue; }
+    if (inT) { if (!esc && c === '`') inT = false; esc = (!esc && c === '\\'); continue; }
+
+    if (c === "'") { inS = true; esc = false; continue; }
+    if (c === '"') { inD = true; esc = false; continue; }
+    if (c === '`') { inT = true; esc = false; continue; }
+
+    if (c === '{') depth++;
+    if (c === '}') depth--;
+
+    if (depth === 0) {
+      return text.slice(startIndex, i + 1);
+    }
+  }
+
+  return null;
+}
 
     async function renderFunctionList(file) {
       functionOutput.innerHTML = '';
