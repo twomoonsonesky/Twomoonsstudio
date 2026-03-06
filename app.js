@@ -173,6 +173,9 @@ function zoomCottage() {
   if (!cottageSmall || !cottageZoomed) return;
 
   isCottageZoomed = true;
+  
+  // HIDE small cottage when zooming
+  cottageSmall.classList.add('hidden');
 
   const smallRect = cottageSmall.getBoundingClientRect();
   const layout = getCurrentLayout();
@@ -198,7 +201,6 @@ function zoomCottage() {
     cottageZoomed.style.top = `${targetTop}px`;
     cottageZoomed.style.width = `${targetWidth}px`;
 
-    // Keep lights with cottage
     syncLights('cottage-zoomed');
     updateLightsVisibility();
   }, 50);
@@ -287,7 +289,7 @@ function sendMessage() {
   chatInput.value = '';
 
   setTimeout(() => {
-    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¨", 'solena');
+    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¨", 'solena');
   }, 1000);
 }
 
@@ -394,11 +396,11 @@ function initStorageTest() {
 
       const url = await getDownloadURL(sRef);
 
-      alert('SUCCESS! ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
+      alert('SUCCESS! ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
       console.log('File URL:', url);
 
     } catch (error) {
-      alert('ERROR ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ: ' + error.message);
+      alert('ERROR ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ: ' + error.message);
       console.error('Firebase Storage error:', error);
     }
   });
