@@ -212,6 +212,7 @@ function zoomCottage() {
 }
 
 function unzoomCottage() {
+  const cottageSmall = document.getElementById('cottage-small');
   const cottageZoomed = document.getElementById('cottage-zoomed');
   const background = document.getElementById('background');
   const orb = document.getElementById('solena-orb');
@@ -236,7 +237,6 @@ function unzoomCottage() {
   cottageZoomed.style.top = `${targetTop}px`;
   cottageZoomed.style.width = `${targetWidth}px`;
 
-  // Keep lights with small cottage during unzoom
   syncLights('cottage-small');
   updateLightsVisibility();
 
@@ -245,7 +245,9 @@ function unzoomCottage() {
     cottageZoomed.classList.add('hidden');
     isCottageZoomed = false;
 
-    // After fully unzoomed, re-apply layout to ensure everything is correct
+    // SHOW small cottage when unzooming
+    cottageSmall?.classList.remove('hidden');
+
     applyLayout();
   }, 650);
 }
@@ -289,7 +291,7 @@ function sendMessage() {
   chatInput.value = '';
 
   setTimeout(() => {
-    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¨", 'solena');
+    addMessageToChat("I understand, dear one. I'm here to help guide you through your creative journey. What would you like to explore today? ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¨", 'solena');
   }, 1000);
 }
 
@@ -396,11 +398,11 @@ function initStorageTest() {
 
       const url = await getDownloadURL(sRef);
 
-      alert('SUCCESS! ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
+      alert('SUCCESS! ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Firebase Storage is working!\n\nFile URL: ' + url);
       console.log('File URL:', url);
 
     } catch (error) {
-      alert('ERROR ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ: ' + error.message);
+      alert('ERROR ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ: ' + error.message);
       console.error('Firebase Storage error:', error);
     }
   });
