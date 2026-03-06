@@ -651,11 +651,17 @@
     }
 
     function extractFunctionSource(text, funcName) {
-  // Find the start of the function in a few common forms.
+  // Escape function name for regex safety (just in case)
+  const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  // Match common function-start forms:
+  // 1) function name(...) { ... }  OR async function name(...) { ... }
+  // 2) const name = (...) => { ... } OR const name = async (...) => { ... }
+  // 3) const name = function(...) { ... } OR const name = async function(...) { ... }
   const patterns = [
-    new RegExp(`(?:async\\s+)?function\\s+${funcName}\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
-    new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm'),
-    new RegExp(`(?:const|let|var)\\s+${funcName}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
+    new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
+    new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*=>\\s*\\{`, 'm'),
+    new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?function\\s*\$begin:math:text$\[\^\)\]\*\\$end:math:text$\\s*\\{`, 'm'),
   ];
 
   let match = null;
@@ -669,7 +675,7 @@
   const braceIndex = text.indexOf('{', startIndex);
   if (braceIndex < 0) return null;
 
-  // Brace match, skipping strings/comments so we don’t get confused.
+  // Brace match while ignoring strings/comments
   let depth = 0;
   let inS = false, inD = false, inT = false;     // ', ", `
   let inLine = false, inBlock = false;           // //, /* */
@@ -698,9 +704,7 @@
     if (c === '{') depth++;
     if (c === '}') depth--;
 
-    if (depth === 0) {
-      return text.slice(startIndex, i + 1);
-    }
+    if (depth === 0) return text.slice(startIndex, i + 1);
   }
 
   return null;
