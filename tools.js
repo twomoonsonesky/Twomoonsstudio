@@ -313,14 +313,14 @@
       const orientationIcon =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationIcon
-          : (window.innerWidth > window.innerHeight ? '🖥️' : '📱');
+          : (window.innerWidth > window.innerHeight ? 'ð¥ï¸' : 'ð±');
 
       const orientationName =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationName
           : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-      const viewIcon = zoomedNow ? '🔍' : '🏠';
+      const viewIcon = zoomedNow ? 'ð' : 'ð ';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -329,14 +329,14 @@
         <div style="text-align:center; margin-bottom: 15px;">
           <strong style="font-size: 16px;">Visual Editor</strong><br>
           <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-            ${orientationIcon} ${orientationName} • ${viewIcon} ${viewName}
+            ${orientationIcon} ${orientationName} â¢ ${viewIcon} ${viewName}
           </div>
-          <em style="font-size: 12px;">Drag to move • Pinch to resize</em>
+          <em style="font-size: 12px;">Drag to move â¢ Pinch to resize</em>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
-          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">💾 Save</button>
-          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">✕ Close</button>
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ð¾ Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">â Close</button>
         </div>
 
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
@@ -344,7 +344,7 @@
 
       currentViewElements.forEach((el) => {
         const name = el.dataset.editName || el.id;
-        const icon = el.dataset.editIcon || '📦';
+        const icon = el.dataset.editIcon || 'ð¦';
         const config = layout[el.id];
         if (!config) return;
 
@@ -365,9 +365,9 @@
       saveBtn?.addEventListener('click', async () => {
         try {
           await saveLayoutToFirebase();
-          alert('✅ Layout saved!');
+          alert('â Layout saved!');
         } catch (e) {
-          alert('❌ Could not save: ' + (e?.message || e));
+          alert('â Could not save: ' + (e?.message || e));
         }
         exitEditMode();
       });
@@ -412,13 +412,15 @@
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
     function setResult(text) {
-      result.textContent = text;
-    }
+  const now = new Date();
+  const time = now.toLocaleTimeString();
+  result.textContent = `[${time}] ${text}`;
+}
 
     function loadTokenFromLocal() {
       const t = localStorage.getItem(STORAGE_KEY);
       if (t) {
-        status && (status.textContent = '✅ Token saved on this iPad');
+        status && (status.textContent = 'â Token saved on this iPad');
         if (tokenInput) tokenInput.value = t;
       } else {
         status && (status.textContent = 'No token saved yet.');
@@ -526,7 +528,7 @@
         return;
       }
       localStorage.setItem(STORAGE_KEY, t);
-      status && (status.textContent = '✅ Token saved on this iPad');
+      status && (status.textContent = 'â Token saved on this iPad');
       setResult('Token saved.');
     });
 
@@ -540,7 +542,7 @@
     // Patch buttons
     dryRunBtn?.addEventListener('click', async () => {
       try {
-        setResult('Dry run…');
+        setResult('Dry runâ¦');
         const token = requireToken();
         const patch = parsePatch();
 
@@ -548,17 +550,17 @@
         const { count } = applyReplace(decoded, patch.find, patch.replace);
 
         if (count === 0) {
-          setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
+          setResult(`â Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
           return;
         }
 
-        setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
+        setResult(`â Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
       } catch (e) {
-        setResult('❌ ' + (e?.message || e));
+        setResult('â ' + (e?.message || e));
       }
     });
 
-    // ✅ COMMIT: double-fetch sha + no-op detection
+    // â COMMIT: double-fetch sha + no-op detection
 	    // Prevent duplicate listeners (stops 409 errors!)
     if (commitBtn && commitBtn.__tailor_listener_added__) {
       setResult('Already processing...');
@@ -568,7 +570,7 @@
 
     commitBtn?.addEventListener('click', async () => {
       try {
-        setResult('Committing patch…');
+        setResult('Committing patchâ¦');
         const token = requireToken();
         const patch = parsePatch();
 
@@ -579,7 +581,7 @@
         const { updated, count } = applyReplace(before.decoded, patch.find, patch.replace);
 
         if (count === 0) {
-          setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
+          setResult(`â Commit blocked: find-text not found in ${patch.filePath}`);
           return;
         }
 
@@ -589,7 +591,7 @@
         // 4) If nothing changes, don't commit
         const same = normalizeNewlines(latest.decoded) === normalizeNewlines(updated);
         if (same) {
-          setResult(`ℹ️ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
+          setResult(`â¹ï¸ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
           return;
         }
 
@@ -605,9 +607,9 @@
           latest.sha
         );
 
-        setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
+        setResult(`â Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
       } catch (e) {
-        setResult('❌ ' + (e?.message || e));
+        setResult('â ' + (e?.message || e));
       }
     });
 
@@ -756,14 +758,14 @@
 
       // Back
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Back';
+      backBtn.textContent = 'â Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderFunctionList(file);
       functionOutput.appendChild(backBtn);
 
       // Title
       const title = document.createElement('div');
-      title.textContent = `${displayName} — (${file})`;
+      title.textContent = `${displayName} â (${file})`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
       functionOutput.appendChild(title);
@@ -780,7 +782,7 @@
       // Replacement (blank by default)
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
-      replaceBox.placeholder = 'Paste your replacement function block here…';
+      replaceBox.placeholder = 'Paste your replacement function block hereâ¦';
       replaceBox.style.width = '100%';
       replaceBox.style.minHeight = '180px';
       replaceBox.style.marginBottom = '10px';
@@ -797,9 +799,9 @@
       copyBtn.onclick = async () => {
         try {
           await navigator.clipboard.writeText(currentBox.value);
-          setResult('✅ Copied current function to clipboard.');
+          setResult('â Copied current function to clipboard.');
         } catch {
-          setResult('⚠️ Copy failed (iOS sometimes blocks clipboard). You can still select+copy manually.');
+          setResult('â ï¸ Copy failed (iOS sometimes blocks clipboard). You can still select+copy manually.');
         }
       };
 
@@ -808,7 +810,7 @@
       makePatchBtn.onclick = () => {
         const replacement = replaceBox.value.trim();
         if (!replacement) {
-          setResult('❌ Paste replacement code into the second box first.');
+          setResult('â Paste replacement code into the second box first.');
           return;
         }
         const patch = {
@@ -821,7 +823,7 @@
           commitMessage: `Tailor patch: update ${funcName}`
         };
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated below. Now press Dry Run.');
+        setResult('â Patch JSON generated below. Now press Dry Run.');
       };
 
       btnRow.appendChild(copyBtn);
@@ -837,18 +839,18 @@
 
         if (open) {
           functionOutput.innerHTML = '';
-          functionBtn.textContent = 'Functions ▾';
+          functionBtn.textContent = 'Functions â¾';
           open = false;
           return;
         }
 
-        functionBtn.textContent = 'Loading…';
+        functionBtn.textContent = 'Loadingâ¦';
         await renderFunctionList(file);
-        functionBtn.textContent = 'Functions ▴';
+        functionBtn.textContent = 'Functions â´';
         open = true;
       } catch (e) {
         functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file. (Is token saved?)</div>';
-        functionBtn.textContent = 'Functions ▾';
+        functionBtn.textContent = 'Functions â¾';
         open = false;
       }
     });
