@@ -559,6 +559,13 @@
     });
 
     // ✅ COMMIT: double-fetch sha + no-op detection
+	    // Prevent duplicate listeners (stops 409 errors!)
+    if (commitBtn && commitBtn.__tailor_listener_added__) {
+      setResult('Already processing...');
+      return;
+    }
+    if (commitBtn) commitBtn.__tailor_listener_added__ = true;
+
     commitBtn?.addEventListener('click', async () => {
       try {
         setResult('Committing patch…');
