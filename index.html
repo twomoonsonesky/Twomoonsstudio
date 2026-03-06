@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Two Moons Studio</title>
-  <link rel="stylesheet" href="styles.css?v=5">
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Two Moons Studio</title>
+	<link rel="stylesheet" href="styles.css?v=5">
 </head>
+
 <body>
 
-  <!-- One button, two options -->
-  <button id="editModeBtn">Edit</button>
+	<!-- One button, two options -->
+	<button id="editModeBtn">Edit</button>
 
-  <div id="editMenu" class="hidden" style="
+	<div id="editMenu" class="hidden" style="
     position: absolute;
     top: 60px;
     left: 12px;
@@ -24,76 +26,57 @@
     flex-direction: column;
     gap: 8px;
     min-width: 160px;">
-    <button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">✏️ Edit layout</button>
-    <button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">🧵 Edit code</button>
-  </div>
+		<button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">✏️ Edit layout</button>
+		<button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">🧵 Edit code</button>
+	</div>
 
-  <div id="layoutInfo" class="layout-info hidden">
-    <div class="layout-info-content"></div>
-  </div>
+	<div id="layoutInfo" class="layout-info hidden">
+		<div class="layout-info-content"></div>
+	</div>
 
-  <div id="grid-overlay" class="grid-overlay hidden"></div>
+	<div id="grid-overlay" class="grid-overlay hidden"></div>
 
-  <div id="landing-container" class="landing-container">
-    <div id="background" class="background-layer"></div>
-    <div id="dusk-overlay" class="dusk-layer"></div>
+	<div id="landing-container" class="landing-container">
+		<div id="background" class="background-layer"></div>
+		<div id="dusk-overlay" class="dusk-layer"></div>
 
-    <img id="cottage-small"
-         src="spring cottage.png"
-         class="editable-element cottage-element"
-         data-edit-name="Cottage (small)"
-         data-edit-icon="🏠"
-         data-edit-view="normal"
-         alt="Cottage">
+		<img id="cottage-small" src="spring cottage.png" class="editable-element cottage-element" data-edit-name="Cottage (small)" data-edit-icon="🏠" data-edit-view="normal" alt="Cottage">
 
-    <img id="cottage-zoomed"
-         src="spring cottage.png"
-         class="editable-element cottage-element zoom-element hidden"
-         data-edit-name="Cottage (zoomed)"
-         data-edit-icon="🔍"
-         data-edit-view="zoomed"
-         alt="Cottage zoomed">
+		<img id="cottage-zoomed" src="spring cottage.png" class="editable-element cottage-element zoom-element hidden" data-edit-name="Cottage (zoomed)" data-edit-icon="🔍" data-edit-view="zoomed" alt="Cottage zoomed">
 
-    <img id="lights"
-         src="spring cottage lights.png"
-         class="lights-element"
-         alt="Cottage lights">
+		<img id="lights" src="spring cottage lights.png" class="lights-element" alt="Cottage lights">
 
-    <div id="solena-orb"
-         class="editable-element orb-element"
-         data-edit-name="Solena Orb"
-         data-edit-icon="✨"
-         data-edit-view="normal">
-    </div>
-  </div>
+		<div id="solena-orb" class="editable-element orb-element" data-edit-name="Solena Orb" data-edit-icon="✨" data-edit-view="normal">
+		</div>
+	</div>
 
-  <!-- Solena chat -->
-  <div id="solena-chat" class="chat-overlay hidden">
-    <div class="chat-container">
-      <div class="chat-header">
-        <div class="chat-orb-small"></div>
-        <h2>Solena</h2>
-        <button id="close-chat" class="close-chat-btn">✕</button>
-      </div>
+	<!-- Solena chat -->
+	<div id="solena-chat" class="chat-overlay hidden">
+		<div class="chat-container">
+			<div class="chat-header">
+				<div class="chat-orb-small"></div>
+				<h2>Solena</h2>
+				<button id="close-chat" class="close-chat-btn">✕</button>
+			</div>
 
-      <div id="chat-messages" class="chat-messages">
-        <div class="message solena-message">
-          <div class="message-bubble">
-            Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
-          </div>
-        </div>
-      </div>
+			<div id="chat-messages" class="chat-messages">
+				<div class="message solena-message">
+					<div class="message-bubble">
+						Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? ✨
+					</div>
+				</div>
+			</div>
 
-      <div class="chat-input-container">
-        <button id="voice-input-btn" class="voice-btn">🎤</button>
-        <input type="text" id="chat-input" placeholder="Type your message..." />
-        <button id="send-btn" class="send-btn">Send</button>
-      </div>
-    </div>
-  </div>
+			<div class="chat-input-container">
+				<button id="voice-input-btn" class="voice-btn">🎤</button>
+				<input type="text" id="chat-input" placeholder="Type your message..." />
+				<button id="send-btn" class="send-btn">Send</button>
+			</div>
+		</div>
+	</div>
 
-  <!-- Tailor overlay -->
-  <div id="tailorOverlay" style="
+	<!-- Tailor overlay -->
+	<div id="tailorOverlay" style="
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.35);
       backdrop-filter: blur(8px);
@@ -103,7 +86,7 @@
       justify-content: center;
       padding: 16px;
   ">
-    <div style="
+		<div style="
         width: min(920px, 100%);
         max-height: 90vh;
         overflow: auto;
@@ -113,31 +96,30 @@
         padding: 16px;
         font-family: Georgia, serif;
     ">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-        <div style="font-size:22px; font-weight:bold;">🧵 Tailor</div>
-        <div style="margin-left:auto; display:flex; gap:8px;">
-          <button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
-        </div>
-      </div>
+			<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+				<div style="font-size:22px; font-weight:bold;">🧵 Tailor</div>
+				<div style="margin-left:auto; display:flex; gap:8px;">
+					<button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
+				</div>
+			</div>
 
-      <div style="font-size:13px; color:#444; line-height:1.5; margin-bottom:12px;">
-        Paste your GitHub token once (it stays on this iPad). Then paste a patch JSON. Use <b>Dry Run</b> first, then <b>Commit Patch</b>.
-      </div>
+			<div style="font-size:13px; color:#444; line-height:1.5; margin-bottom:12px;">
+				Paste your GitHub token once (it stays on this iPad). Then paste a patch JSON. Use <b>Dry Run</b> first, then <b>Commit Patch</b>.
+			</div>
 
-      <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
-        <label style="font-size:13px; font-weight:bold;">GitHub Token (fine-grained PAT)</label>
-        <input id="tailorToken" type="password" placeholder="Paste token here (saved locally on this iPad)"
-          style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%;" />
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="tailorSaveTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#6b4fbb; color:white; font-weight:bold; cursor:pointer;">Save Token</button>
-          <button id="tailorClearTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#999; color:white; font-weight:bold; cursor:pointer;">Clear Token</button>
-          <div id="tailorTokenStatus" style="align-self:center; font-size:13px; color:#555;"></div>
-        </div>
-      </div>
+			<div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
+				<label style="font-size:13px; font-weight:bold;">GitHub Token (fine-grained PAT)</label>
+				<input id="tailorToken" type="password" placeholder="Paste token here (saved locally on this iPad)" style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%;" />
+				<div style="display:flex; gap:8px; flex-wrap:wrap;">
+					<button id="tailorSaveTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#6b4fbb; color:white; font-weight:bold; cursor:pointer;">Save Token</button>
+					<button id="tailorClearTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#999; color:white; font-weight:bold; cursor:pointer;">Clear Token</button>
+					<div id="tailorTokenStatus" style="align-self:center; font-size:13px; color:#555;"></div>
+				</div>
+			</div>
 
-      <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
-        <label style="font-size:13px; font-weight:bold;">Patch JSON</label>
-        <textarea id="tailorPatch" rows="10" placeholder='Example:
+			<div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
+				<label style="font-size:13px; font-weight:bold;">Patch JSON</label>
+				<textarea id="tailorPatch" rows="10" placeholder='Example:
 {
   "owner": "twomoonsonesky",
   "repo": "Twomoonsstudio",
@@ -146,41 +128,38 @@
   "find": "setInterval(checkTimeAndSetMode, 3600000);",
   "replace": "setInterval(checkTimeAndSetMode, 60 * 1000);",
   "commitMessage": "Tailor patch: update interval"
-}'
-          style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+}' style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
 
-        <!-- Tailor: Function Finder -->
-        <div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,0,0,0.08);">
-          <div style="font-weight:bold; margin-bottom:8px;">🧵 Tailor — Function Finder</div>
+				<!-- Tailor: Function Finder -->
+				<div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,0,0,0.08);">
+					<div style="font-weight:bold; margin-bottom:8px;">🧵 Tailor — Function Finder</div>
 
-          <label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
-          <select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
-            <option value="app.js" selected>JavaScript (app.js)</option>
-            <option value="tools.js">JavaScript (tools.js)</option>
-            <option value="index.html" disabled>HTML (coming soon)</option>
-            <option value="styles.css" disabled>CSS (coming soon)</option>
-          </select>
+					<label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
+					<select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
+						<option value="app.js" selected>JavaScript (app.js)</option>
+						<option value="tools.js">JavaScript (tools.js)</option>
+						<option value="index.html" disabled>HTML (coming soon)</option>
+						<option value="styles.css" disabled>CSS (coming soon)</option>
+					</select>
 
-          <button id="tailor-go"
-            style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px;
+					<button id="tailor-go" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px;
                    background:rgba(100,150,255,0.9); color:white; font-weight:bold; cursor:pointer;">
-            Functions ▾
-          </button>
+						Functions ▾
+					</button>
 
-          <div id="tailor-output"
-            style="margin-top:10px; font-size:12px; max-height:240px; overflow:auto;
+					<div id="tailor-output" style="margin-top:10px; font-size:12px; max-height:240px; overflow:auto;
                    background:rgba(0,0,0,0.04); padding:10px; border-radius:10px;">
-          </div>
-        </div>
+					</div>
+				</div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button id="tailorDryRunBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">Dry Run</button>
-          <button id="tailorCommitBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#16a34a; color:white; font-weight:bold; cursor:pointer;">Commit Patch</button>
-        </div>
-      </div>
+				<div style="display:flex; gap:8px; flex-wrap:wrap;">
+					<button id="tailorDryRunBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">Dry Run</button>
+					<button id="tailorCommitBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#16a34a; color:white; font-weight:bold; cursor:pointer;">Commit Patch</button>
+				</div>
+			</div>
 
-      <div style="font-size:12px; color:#444; margin-bottom:6px;"><b>Result</b></div>
-      <pre id="tailorResult" style="
+			<div style="font-size:12px; color:#444; margin-bottom:6px;"><b>Result</b></div>
+			<pre id="tailorResult" style="
           white-space: pre-wrap;
           background: rgba(0,0,0,0.06);
           padding: 12px;
@@ -190,11 +169,12 @@
           font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
           min-height: 80px;
       "></pre>
-    </div>
-  </div>
+		</div>
+	</div>
 
-  <!-- IMPORTANT: tools.js first, then app.js -->
-  <script type="module" src="tools.js?v=5"></script>
-  <script type="module" src="app.js?v=5"></script>
+	<!-- IMPORTANT: tools.js first, then app.js -->
+	<script type="module" src="tools.js?v=5"></script>
+	<script type="module" src="app.js?v=5"></script>
 </body>
+
 </html>
