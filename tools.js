@@ -317,14 +317,14 @@
       const orientationIcon =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationIcon
-          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±');
+          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±');
 
       const orientationName =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationName
           : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-      const viewIcon = zoomedNow ? 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ';
+      const viewIcon = zoomedNow ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -333,14 +333,14 @@
         <div style="text-align:center; margin-bottom: 15px;">
           <strong style="font-size: 16px;">Visual Editor</strong><br>
           <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-            ${orientationIcon} ${orientationName} ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
+            ${orientationIcon} ${orientationName} ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
           </div>
-          <em style="font-size: 12px;">Drag to move ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
+          <em style="font-size: 12px;">Drag to move ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
-          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
-          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Close</button>
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Close</button>
         </div>
 
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
@@ -348,7 +348,7 @@
 
       currentViewElements.forEach((el) => {
         const name = el.dataset.editName || el.id;
-        const icon = el.dataset.editIcon || 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦';
+        const icon = el.dataset.editIcon || 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦';
         const config = layout[el.id];
         if (!config) return;
 
@@ -369,9 +369,9 @@
       saveBtn?.addEventListener('click', async () => {
         try {
           await saveLayoutToFirebase();
-          alert('ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Layout saved!');
+          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Layout saved!');
         } catch (e) {
-          alert('ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
+          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
         }
         exitEditMode();
       });
@@ -435,7 +435,7 @@
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
     // 🆕 CURRENT MODE STATE
-    let currentMode = 'replace'; // 'replace' | 'insertAfter' | 'append' | 'viewFull'
+    let currentMode = 'replace'; // 'replace' | 'insertAfter' | 'append' | 'viewFull' | 'editSection'
 
     function setResult(text) {
       const now = new Date();
@@ -717,9 +717,60 @@
       return null;
     }
 
-    // 🆕 MODE SELECTOR UI
+    // 🆕 EXTRACT SECTIONS FROM HTML/CSS FILES
+    function getSectionNames(text) {
+      const sections = [];
+      
+      // Match HTML comments: <!-- SECTION_NAME_START -->
+      const htmlPattern = /<!--\s*([A-Z_]+)_START\s*-->/g;
+      
+      // Match CSS comments: /* SECTION_NAME_START */
+      const cssPattern = /\/\*\s*([A-Z_]+)_START\s*\*\//g;
+      
+      for (const m of text.matchAll(htmlPattern)) {
+        sections.push(m[1]);
+      }
+      
+      for (const m of text.matchAll(cssPattern)) {
+        sections.push(m[1]);
+      }
+      
+      return [...new Set(sections)].sort();
+    }
+
+    // 🆕 EXTRACT SECTION CONTENT
+    function extractSectionContent(text, sectionName) {
+      // Try HTML comment pattern first
+      const htmlStart = `<!-- ${sectionName}_START -->`;
+      const htmlEnd = `<!-- ${sectionName}_END -->`;
+      
+      let startIdx = text.indexOf(htmlStart);
+      let endIdx = text.indexOf(htmlEnd);
+      
+      // If not found, try CSS comment pattern
+      if (startIdx === -1) {
+        const cssStart = `/* ${sectionName}_START */`;
+        const cssEnd = `/* ${sectionName}_END */`;
+        
+        startIdx = text.indexOf(cssStart);
+        endIdx = text.indexOf(cssEnd);
+        
+        if (startIdx !== -1 && endIdx !== -1) {
+          return text.slice(startIdx, endIdx + cssEnd.length);
+        }
+      } else if (endIdx !== -1) {
+        return text.slice(startIdx, endIdx + htmlEnd.length);
+      }
+      
+      return null;
+    }
+
+    // 🆕 MODE SELECTOR UI (UPDATED WITH 5TH MODE!)
     function renderModeSelector() {
       functionOutput.innerHTML = '';
+      
+      const file = fileSelect?.value || 'app.js';
+      const isHtmlCss = file === 'index.html' || file === 'styles.css';
       
       const title = document.createElement('div');
       title.textContent = '✂️ Choose Edit Mode:';
@@ -728,13 +779,19 @@
       functionOutput.appendChild(title);
 
       const modes = [
-        { id: 'replace', label: '🔄 Replace Function', desc: 'Update existing function' },
-        { id: 'insertAfter', label: '➕ Insert After Function', desc: 'Add new function after selected' },
-        { id: 'append', label: '📝 Append to End', desc: 'Add new code at end of file' },
-        { id: 'viewFull', label: '📄 View/Edit Full File', desc: 'Edit entire file content' }
+        { id: 'replace', label: '🔄 Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'insertAfter', label: '➕ Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'append', label: '📝 Append to End', desc: 'Add new code at end of file', showFor: 'all' },
+        { id: 'editSection', label: '📍 Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
+        { id: 'viewFull', label: '📄 View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' }
       ];
 
       modes.forEach(mode => {
+        // Filter modes based on file type
+        if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
+          return; // Skip this mode for this file type
+        }
+        
         const btn = document.createElement('button');
         btn.textContent = mode.label;
         btn.style.width = '100%';
@@ -762,7 +819,7 @@
       });
     }
 
-    // 🆕 START EDIT MODE BASED ON SELECTION
+    // 🆕 START EDIT MODE BASED ON SELECTION (UPDATED!)
     async function startEditMode() {
       const file = fileSelect?.value || 'app.js';
 
@@ -770,10 +827,197 @@
         await renderViewFullMode(file);
       } else if (currentMode === 'append') {
         await renderAppendMode(file);
+      } else if (currentMode === 'editSection') {
+        await renderSectionList(file);
       } else {
         // replace or insertAfter - both need function list
         await renderFunctionList(file);
       }
+    }
+
+    // 🆕 RENDER SECTION LIST
+    async function renderSectionList(file) {
+      functionOutput.innerHTML = '';
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Change Mode';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
+
+      const title = document.createElement('div');
+      title.textContent = `📍 Edit Sections: ${file}`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0 12px 0';
+      functionOutput.appendChild(title);
+
+      functionBtn.textContent = 'Loading…';
+      const text = await getFileText(file);
+      const sections = getSectionNames(text);
+      functionBtn.textContent = 'Functions ▴';
+
+      if (!sections.length) {
+        functionOutput.innerHTML += '<div style="padding:6px 0;">No marked sections found in this file.</div>';
+        return;
+      }
+
+      sections.forEach((sectionName) => {
+        const div = document.createElement('div');
+        div.textContent = sectionName.replace(/_/g, ' ');
+        div.style.cursor = 'pointer';
+        div.style.padding = '6px 0';
+        div.style.textDecoration = 'underline';
+
+        div.addEventListener('click', async () => {
+          await renderSectionDetail(file, sectionName, text);
+        });
+
+        functionOutput.appendChild(div);
+      });
+    }
+
+    // 🆕 RENDER SECTION DETAIL
+    async function renderSectionDetail(file, sectionName, fullText) {
+      functionOutput.innerHTML = '';
+
+      const content = extractSectionContent(fullText, sectionName);
+
+      if (!content) {
+        functionOutput.innerHTML = 'Could not locate section markers.';
+        return;
+      }
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Back';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = () => renderSectionList(file);
+      functionOutput.appendChild(backBtn);
+
+      const title = document.createElement('div');
+      title.textContent = `📍 Section: ${sectionName.replace(/_/g, ' ')} — (${file})`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0';
+      functionOutput.appendChild(title);
+
+      // Mode selector: Replace or Insert After
+      const modeRow = document.createElement('div');
+      modeRow.style.display = 'flex';
+      modeRow.style.gap = '8px';
+      modeRow.style.marginBottom = '10px';
+
+      let sectionMode = 'replace'; // default
+
+      const replaceBtn = document.createElement('button');
+      replaceBtn.textContent = 'Replace Section';
+      replaceBtn.style.padding = '8px 12px';
+      replaceBtn.style.border = '2px solid #4CAF50';
+      replaceBtn.style.borderRadius = '6px';
+      replaceBtn.style.background = '#e8f5e9';
+      replaceBtn.style.cursor = 'pointer';
+
+      const insertBtn = document.createElement('button');
+      insertBtn.textContent = 'Insert After Section';
+      insertBtn.style.padding = '8px 12px';
+      insertBtn.style.border = '2px solid #ccc';
+      insertBtn.style.borderRadius = '6px';
+      insertBtn.style.background = 'white';
+      insertBtn.style.cursor = 'pointer';
+
+      replaceBtn.onclick = () => {
+        sectionMode = 'replace';
+        replaceBtn.style.border = '2px solid #4CAF50';
+        replaceBtn.style.background = '#e8f5e9';
+        insertBtn.style.border = '2px solid #ccc';
+        insertBtn.style.background = 'white';
+        infoDiv.textContent = 'Replace the entire section with new code.';
+      };
+
+      insertBtn.onclick = () => {
+        sectionMode = 'insertAfter';
+        insertBtn.style.border = '2px solid #4CAF50';
+        insertBtn.style.background = '#e8f5e9';
+        replaceBtn.style.border = '2px solid #ccc';
+        replaceBtn.style.background = 'white';
+        infoDiv.textContent = 'New code will be inserted after the section end marker.';
+      };
+
+      modeRow.appendChild(replaceBtn);
+      modeRow.appendChild(insertBtn);
+      functionOutput.appendChild(modeRow);
+
+      const infoDiv = document.createElement('div');
+      infoDiv.textContent = 'Replace the entire section with new code.';
+      infoDiv.style.padding = '8px';
+      infoDiv.style.background = '#fff3cd';
+      infoDiv.style.border = '1px solid #ffc107';
+      infoDiv.style.borderRadius = '4px';
+      infoDiv.style.marginBottom = '10px';
+      infoDiv.style.fontSize = '13px';
+      functionOutput.appendChild(infoDiv);
+
+      // Current section code (readonly)
+      const currentBox = document.createElement('textarea');
+      currentBox.value = content;
+      currentBox.readOnly = true;
+      currentBox.style.width = '100%';
+      currentBox.style.minHeight = '150px';
+      currentBox.style.marginBottom = '10px';
+      currentBox.style.background = '#f5f5f5';
+      currentBox.style.fontFamily = 'monospace';
+      currentBox.style.fontSize = '12px';
+      functionOutput.appendChild(currentBox);
+
+      // New code box
+      const replaceBox = document.createElement('textarea');
+      replaceBox.value = '';
+      replaceBox.placeholder = 'Paste new code here…';
+      replaceBox.style.width = '100%';
+      replaceBox.style.minHeight = '180px';
+      replaceBox.style.marginBottom = '10px';
+      replaceBox.style.fontFamily = 'monospace';
+      replaceBox.style.fontSize = '12px';
+      functionOutput.appendChild(replaceBox);
+
+      // Make Patch button
+      const makePatchBtn = document.createElement('button');
+      makePatchBtn.textContent = 'Make Patch JSON';
+      makePatchBtn.onclick = () => {
+        const newCode = replaceBox.value.trim();
+        if (!newCode) {
+          setResult('❌ Paste code in the box first.');
+          return;
+        }
+
+        let patch;
+        if (sectionMode === 'replace') {
+          // REPLACE: find section, replace with new
+          patch = {
+            owner: GH_DEFAULTS.owner,
+            repo: GH_DEFAULTS.repo,
+            branch: GH_DEFAULTS.branch,
+            filePath: file,
+            find: content,
+            replace: newCode,
+            commitMessage: `Tailor: replace section ${sectionName}`
+          };
+        } else {
+          // INSERT AFTER: find section, replace with section + new
+          patch = {
+            owner: GH_DEFAULTS.owner,
+            repo: GH_DEFAULTS.repo,
+            branch: GH_DEFAULTS.branch,
+            filePath: file,
+            find: content,
+            replace: content + '\n\n' + newCode,
+            commitMessage: `Tailor: insert after section ${sectionName}`
+          };
+        }
+
+        if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
+        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+      };
+
+      functionOutput.appendChild(makePatchBtn);
     }
 
     // 🆕 VIEW FULL FILE MODE
