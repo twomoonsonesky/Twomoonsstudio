@@ -1,5 +1,6 @@
 /* Two Moon Studio - Image-Based Visual Editor */
 
+/* GLOBAL_STYLES_START */
 * {
     margin: 0;
     padding: 0;
@@ -12,18 +13,18 @@ body {
     width: 100vw;
     height: 100vh;
 }
+/* GLOBAL_STYLES_END */
 
-/* ==========================================
-   LANDING CONTAINER
-   ========================================== */
-
+/* LANDING_CONTAINER_START */
 .landing-container {
     position: relative;
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
+/* LANDING_CONTAINER_END */
 
+/* BACKGROUND_LAYERS_START */
 /* Background Layer */
 .background-layer {
     position: absolute;
@@ -60,17 +61,17 @@ body {
 .dusk-layer.active {
     opacity: 1;
 }
+/* BACKGROUND_LAYERS_END */
 
-/* ==========================================
-   EDITABLE ELEMENTS (IMG BASED!)
-   ========================================== */
-
+/* EDITABLE_ELEMENTS_START */
 .editable-element {
     position: absolute;
     cursor: pointer;
     user-select: none;
 }
+/* EDITABLE_ELEMENTS_END */
 
+/* COTTAGE_STYLES_START */
 /* Cottage Images */
 .cottage-element {
     z-index: 2;
@@ -103,7 +104,9 @@ body {
     visibility: hidden;
     opacity: 0;
 }
+/* COTTAGE_STYLES_END */
 
+/* LIGHTS_STYLES_START */
 /* Lights */
 .lights-element {
     position: absolute;
@@ -112,13 +115,15 @@ body {
     pointer-events: none;
     /* Only animate fade. Never animate position/size (prevents lag). */
     transition: left 0.6s ease, top 0.6s ease, width 0.6s ease, height 0.6s ease, opacity 1s ease;
-will-change: left, top, width, height, opacity;
+    will-change: left, top, width, height, opacity;
 }
 
 .lights-element.active {
     opacity: 1;
 }
+/* LIGHTS_STYLES_END */
 
+/* ORB_STYLES_START */
 /* Orb (CSS gradient) */
 .orb-element {
     border-radius: 50%;
@@ -170,11 +175,9 @@ will-change: left, top, width, height, opacity;
     opacity: 0.65;
     filter: blur(3px);
 }
+/* ORB_STYLES_END */
 
-/* ==========================================
-   EDIT MODE
-   ========================================== */
-
+/* EDIT_MODE_STYLES_START */
 .edit-mode-button {
     position: fixed;
     top: 20px;
@@ -254,11 +257,9 @@ will-change: left, top, width, height, opacity;
 .layout-info-content {
     line-height: 1.6;
 }
+/* EDIT_MODE_STYLES_END */
 
-/* ==========================================
-   CHAT INTERFACE
-   ========================================== */
-
+/* CHAT_INTERFACE_START */
 .chat-overlay {
     position: fixed;
     top: 0;
@@ -496,3 +497,4 @@ will-change: left, top, width, height, opacity;
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(150, 180, 255, 0.4);
 }
+/* CHAT_INTERFACE_END */
