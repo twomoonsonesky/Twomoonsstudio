@@ -30,9 +30,9 @@
     flex-direction: column;
     gap: 8px;
     min-width: 160px;">
-	<button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">✏️ Edit layout</button>
-	<button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">🧵 Edit code</button>
-	<button id="uploadAssetsOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">📤 Upload assets</button>
+	<button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">âï¸ Edit layout</button>
+	<button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">ð§µ Edit code</button>
+	<button id="uploadAssetsOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">ð¤ Upload assets</button>
 </div>
 <!-- EDIT_MENU_END -->
 
@@ -54,9 +54,9 @@
 		<!-- BACKGROUND_LAYERS_END -->
 
 		<!-- COTTAGE_ELEMENTS_START -->
-		<img id="cottage-small" src="spring cottage.png" class="editable-element cottage-element" data-edit-name="Cottage (small)" data-edit-icon="ð " data-edit-view="normal" alt="Cottage">
+		<img id="cottage-small" src="spring cottage.png" class="editable-element cottage-element" data-edit-name="Cottage (small)" data-edit-icon="Ã°ÂÂÂ " data-edit-view="normal" alt="Cottage">
 
-		<img id="cottage-zoomed" src="spring cottage.png" class="editable-element cottage-element zoom-element hidden" data-edit-name="Cottage (zoomed)" data-edit-icon="ð" data-edit-view="zoomed" alt="Cottage zoomed">
+		<img id="cottage-zoomed" src="spring cottage.png" class="editable-element cottage-element zoom-element hidden" data-edit-name="Cottage (zoomed)" data-edit-icon="Ã°ÂÂÂ" data-edit-view="zoomed" alt="Cottage zoomed">
 		<!-- COTTAGE_ELEMENTS_END -->
 
 		<!-- LIGHTS_ELEMENT_START -->
@@ -64,7 +64,7 @@
 		<!-- LIGHTS_ELEMENT_END -->
 
 		<!-- SOLENA_ORB_START -->
-		<div id="solena-orb" class="editable-element orb-element" data-edit-name="Solena Orb" data-edit-icon="â¨" data-edit-view="normal">
+		<div id="solena-orb" class="editable-element orb-element" data-edit-name="Solena Orb" data-edit-icon="Ã¢ÂÂ¨" data-edit-view="normal">
 		</div>
 		<!-- SOLENA_ORB_END -->
 	</div>
@@ -76,25 +76,57 @@
 			<div class="chat-header">
 				<div class="chat-orb-small"></div>
 				<h2>Solena</h2>
-				<button id="close-chat" class="close-chat-btn">â</button>
+				<button id="close-chat" class="close-chat-btn">Ã¢ÂÂ</button>
 			</div>
 
 			<div id="chat-messages" class="chat-messages">
 				<div class="message solena-message">
 					<div class="message-bubble">
-						Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? â¨
+						Hello, dear one. I'm Solena, your companion in this creative journey. How can I help you today? Ã¢ÂÂ¨
 					</div>
 				</div>
 			</div>
 
 			<div class="chat-input-container">
-				<button id="voice-input-btn" class="voice-btn">ð¤</button>
+				<button id="voice-input-btn" class="voice-btn">Ã°ÂÂÂ¤</button>
 				<input type="text" id="chat-input" placeholder="Type your message..." />
 				<button id="send-btn" class="send-btn">Send</button>
 			</div>
 		</div>
 	</div>
 	<!-- SOLENA_CHAT_END -->
+
+<!-- UPLOAD_UI_START -->
+<div id="uploadUI" class="upload-overlay hidden">
+	<div class="upload-panel">
+		<div class="upload-header">
+			<span>📤 Upload Assets</span>
+			<button id="closeUploadBtn" class="upload-close">✕</button>
+		</div>
+		
+		<input type="file" id="fileInput" accept="image/*" style="display:none;" multiple />
+		
+		<button id="selectFilesBtn" class="upload-btn-secondary">
+			Choose Files
+		</button>
+		
+		<div id="fileList" class="file-list"></div>
+		
+		<button id="uploadBtn" class="upload-btn-primary hidden">
+			Upload to Firebase
+		</button>
+		
+		<div id="uploadProgress" class="upload-progress hidden">
+			<div class="progress-bar">
+				<div id="progressFill" class="progress-fill"></div>
+			</div>
+			<div id="uploadStatus" class="upload-status"></div>
+		</div>
+		
+		<div id="uploadResults" class="upload-results hidden"></div>
+	</div>
+</div>
+<!-- UPLOAD_UI_END -->
 
 	<!-- TAILOR_OVERLAY_START -->
 	<div id="tailorOverlay" style="
@@ -118,7 +150,7 @@
         font-family: Georgia, serif;
     ">
 			<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-				<div style="font-size:22px; font-weight:bold;">ð§µ Tailor</div>
+				<div style="font-size:22px; font-weight:bold;">Ã°ÂÂ§Âµ Tailor</div>
 				<div style="margin-left:auto; display:flex; gap:8px;">
 					<button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
 				</div>
@@ -153,7 +185,7 @@
 
 				<!-- Tailor: Function Finder -->
 				<div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,0,0,0.08);">
-					<div style="font-weight:bold; margin-bottom:8px;">ð§µ Tailor â Function Finder</div>
+					<div style="font-weight:bold; margin-bottom:8px;">Ã°ÂÂ§Âµ Tailor Ã¢ÂÂ Function Finder</div>
 
 					<label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
 					<select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
@@ -165,7 +197,7 @@
 
 					<button id="tailor-go" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px;
                    background:rgba(100,150,255,0.9); color:white; font-weight:bold; cursor:pointer;">
-						Functions â¾
+						Functions Ã¢ÂÂ¾
 					</button>
 
 					<div id="tailor-output" style="margin-top:10px; font-size:12px; max-height:240px; overflow:auto;
