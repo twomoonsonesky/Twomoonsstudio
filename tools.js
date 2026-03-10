@@ -317,14 +317,14 @@
       const orientationIcon =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationIcon
-          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ' : 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ±');
+          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±');
 
       const orientationName =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationName
           : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-      const viewIcon = zoomedNow ? 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ ';
+      const viewIcon = zoomedNow ? 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -333,14 +333,14 @@
         <div style="text-align:center; margin-bottom: 15px;">
           <strong style="font-size: 16px;">Visual Editor</strong><br>
           <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-            ${orientationIcon} ${orientationName} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
+            ${orientationIcon} ${orientationName} ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
           </div>
-          <em style="font-size: 12px;">Drag to move ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
+          <em style="font-size: 12px;">Drag to move ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
-          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
-          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Close</button>
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Close</button>
         </div>
 
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
@@ -348,7 +348,7 @@
 
       currentViewElements.forEach((el) => {
         const name = el.dataset.editName || el.id;
-        const icon = el.dataset.editIcon || 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¦';
+        const icon = el.dataset.editIcon || 'ÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦';
         const config = layout[el.id];
         if (!config) return;
 
@@ -369,9 +369,9 @@
       saveBtn?.addEventListener('click', async () => {
         try {
           await saveLayoutToFirebase();
-          alert('ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Layout saved!');
+          alert('ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Layout saved!');
         } catch (e) {
-          alert('ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
+          alert('ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
         }
         exitEditMode();
       });
@@ -413,7 +413,7 @@
 
     // 🎯 UPGRADE: Populate file dropdown dynamically with ALL files!
     if (fileSelect) {
-      fileSelect.innerHTML = '';  // Clear existing options
+      fileSelect.innerHTML = '';
       const files = ['app.js', 'tools.js', 'index.html', 'styles.css', 'firebase-config.js'];
       files.forEach(file => {
         const option = document.createElement('option');
@@ -433,6 +433,9 @@
     };
 
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
+
+    // 🆕 CURRENT MODE STATE
+    let currentMode = 'replace'; // 'replace' | 'insertAfter' | 'append' | 'viewFull'
 
     function setResult(text) {
       const now = new Date();
@@ -471,7 +474,6 @@
       return obj;
     }
 
-    // Encode each segment but keep slashes
     function ghPath(path) {
       return String(path).split('/').map(encodeURIComponent).join('/');
     }
@@ -507,7 +509,6 @@
     }
 
     function applyReplace(sourceText, find, replace) {
-      // Normalize line endings to reduce false "not found"
       const S = normalizeNewlines(sourceText);
       const F = normalizeNewlines(find);
       const R = normalizeNewlines(replace);
@@ -515,7 +516,6 @@
       const count = S.split(F).length - 1;
       if (count <= 0) return { updated: sourceText, count: 0 };
 
-      // Return updated text in normalized newline form (GitHub stores LF fine)
       return { updated: S.split(F).join(R), count };
     }
 
@@ -583,17 +583,13 @@
       }
     });
 
-    // ✅ COMMIT: double-fetch sha + no-op detection
     commitBtn?.addEventListener('click', async () => {
       try {
         setResult('Committing patch…');
         const token = requireToken();
         const patch = parsePatch();
 
-        // 1) Get current content
         const before = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
-
-        // 2) Apply replace
         const { updated, count } = applyReplace(before.decoded, patch.find, patch.replace);
 
         if (count === 0) {
@@ -601,17 +597,14 @@
           return;
         }
 
-        // 3) Fetch again RIGHT before PUT (proof/guard against sha mismatch)
         const latest = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
 
-        // 4) If nothing changes, don't commit
         const same = normalizeNewlines(latest.decoded) === normalizeNewlines(updated);
         if (same) {
           setResult(`ℹ️ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
           return;
         }
 
-        // 5) PUT using latest sha
         await putFileContent(
           token,
           patch.owner,
@@ -635,7 +628,6 @@
       return;
     }
 
-    // Reads from GitHub (same source as patcher)
     async function getFileText(file) {
       const token = requireToken();
       const { decoded } = await getFileContent(
@@ -652,22 +644,18 @@
       const text = await getFileText(file);
       const names = new Set();
 
-      // function name(
       for (const m of text.matchAll(/(?:async\s+)?function\s+([A-Za-z0-9_$]+)\s*\(/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = function(
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?function\s*\(/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = (...) =>   OR const name = async (...) =>
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\([^)]*\)\s*=>/g)) {
         names.add(m[1] + '()');
       }
 
-      // const name = (   OR const name = async (   (covers some patterns)
       for (const m of text.matchAll(/(?:const|let|var)\s+([A-Za-z0-9_$]+)\s*=\s*(?:async\s*)?\(/g)) {
         names.add(m[1] + '()');
       }
@@ -676,13 +664,8 @@
     }
 
     function extractFunctionSource(text, funcName) {
-      // Escape function name for regex safety
       const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-      // Match common function-start forms:
-      // 1) function name(...) OR async function name(...)
-      // 2) const name = (...) => OR const name = async (...) =>
-      // 3) const name = function(...) OR const name = async function(...)
       const patterns = [
         new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
         new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?\\([^)]*\\)\\s*=>\\s*\\{`, 'm'),
@@ -700,10 +683,9 @@
       const braceIndex = text.indexOf('{', startIndex);
       if (braceIndex < 0) return null;
 
-      // Brace matching while ignoring strings/comments
       let depth = 0;
-      let inS = false, inD = false, inT = false;     // ', ", `
-      let inLine = false, inBlock = false;           // //, /* */
+      let inS = false, inD = false, inT = false;
+      let inLine = false, inBlock = false;
       let esc = false;
 
       for (let i = braceIndex; i < text.length; i++) {
@@ -735,12 +717,184 @@
       return null;
     }
 
+    // 🆕 MODE SELECTOR UI
+    function renderModeSelector() {
+      functionOutput.innerHTML = '';
+      
+      const title = document.createElement('div');
+      title.textContent = '✂️ Choose Edit Mode:';
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '12px';
+      functionOutput.appendChild(title);
+
+      const modes = [
+        { id: 'replace', label: '🔄 Replace Function', desc: 'Update existing function' },
+        { id: 'insertAfter', label: '➕ Insert After Function', desc: 'Add new function after selected' },
+        { id: 'append', label: '📝 Append to End', desc: 'Add new code at end of file' },
+        { id: 'viewFull', label: '📄 View/Edit Full File', desc: 'Edit entire file content' }
+      ];
+
+      modes.forEach(mode => {
+        const btn = document.createElement('button');
+        btn.textContent = mode.label;
+        btn.style.width = '100%';
+        btn.style.padding = '12px';
+        btn.style.marginBottom = '8px';
+        btn.style.textAlign = 'left';
+        btn.style.cursor = 'pointer';
+        btn.style.border = '2px solid #ccc';
+        btn.style.borderRadius = '6px';
+        btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
+
+        const desc = document.createElement('div');
+        desc.textContent = mode.desc;
+        desc.style.fontSize = '0.85em';
+        desc.style.color = '#666';
+        desc.style.marginTop = '4px';
+        btn.appendChild(desc);
+
+        btn.onclick = () => {
+          currentMode = mode.id;
+          startEditMode();
+        };
+
+        functionOutput.appendChild(btn);
+      });
+    }
+
+    // 🆕 START EDIT MODE BASED ON SELECTION
+    async function startEditMode() {
+      const file = fileSelect?.value || 'app.js';
+
+      if (currentMode === 'viewFull') {
+        await renderViewFullMode(file);
+      } else if (currentMode === 'append') {
+        await renderAppendMode(file);
+      } else {
+        // replace or insertAfter - both need function list
+        await renderFunctionList(file);
+      }
+    }
+
+    // 🆕 VIEW FULL FILE MODE
+    async function renderViewFullMode(file) {
+      functionOutput.innerHTML = '';
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Change Mode';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
+
+      const title = document.createElement('div');
+      title.textContent = `📄 Full File: ${file}`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0 12px 0';
+      functionOutput.appendChild(title);
+
+      functionBtn.textContent = 'Loading…';
+      const text = await getFileText(file);
+      functionBtn.textContent = 'Functions ▴';
+
+      const editBox = document.createElement('textarea');
+      editBox.value = text;
+      editBox.style.width = '100%';
+      editBox.style.minHeight = '300px';
+      editBox.style.fontFamily = 'monospace';
+      editBox.style.fontSize = '12px';
+      editBox.style.marginBottom = '10px';
+      functionOutput.appendChild(editBox);
+
+      const makePatchBtn = document.createElement('button');
+      makePatchBtn.textContent = 'Make Patch JSON (Replace Entire File)';
+      makePatchBtn.onclick = () => {
+        const patch = {
+          owner: GH_DEFAULTS.owner,
+          repo: GH_DEFAULTS.repo,
+          branch: GH_DEFAULTS.branch,
+          filePath: file,
+          find: text,
+          replace: editBox.value,
+          commitMessage: `Tailor: edit full file ${file}`
+        };
+        if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
+        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+      };
+      functionOutput.appendChild(makePatchBtn);
+    }
+
+    // 🆕 APPEND MODE
+    async function renderAppendMode(file) {
+      functionOutput.innerHTML = '';
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Change Mode';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
+
+      const title = document.createElement('div');
+      title.textContent = `📝 Append to End: ${file}`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0 12px 0';
+      functionOutput.appendChild(title);
+
+      functionBtn.textContent = 'Loading…';
+      const text = await getFileText(file);
+      functionBtn.textContent = 'Functions ▴';
+
+      const newCodeBox = document.createElement('textarea');
+      newCodeBox.placeholder = 'Paste new code to append at end of file…';
+      newCodeBox.style.width = '100%';
+      newCodeBox.style.minHeight = '200px';
+      newCodeBox.style.fontFamily = 'monospace';
+      newCodeBox.style.marginBottom = '10px';
+      functionOutput.appendChild(newCodeBox);
+
+      const makePatchBtn = document.createElement('button');
+      makePatchBtn.textContent = 'Make Patch JSON (Append)';
+      makePatchBtn.onclick = () => {
+        const newCode = newCodeBox.value.trim();
+        if (!newCode) {
+          setResult('❌ Paste code to append first.');
+          return;
+        }
+        const patch = {
+          owner: GH_DEFAULTS.owner,
+          repo: GH_DEFAULTS.repo,
+          branch: GH_DEFAULTS.branch,
+          filePath: file,
+          find: text,
+          replace: text + '\n\n' + newCode,
+          commitMessage: `Tailor: append to ${file}`
+        };
+        if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
+        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+      };
+      functionOutput.appendChild(makePatchBtn);
+    }
+
+    // 🔄 MODIFIED: Function list (mode-aware)
     async function renderFunctionList(file) {
       functionOutput.innerHTML = '';
+
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '← Change Mode';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
+
+      const modeLabel = currentMode === 'replace' ? '🔄 Replace' : '➕ Insert After';
+      const title = document.createElement('div');
+      title.textContent = `${modeLabel}: ${file}`;
+      title.style.fontWeight = 'bold';
+      title.style.margin = '6px 0 12px 0';
+      functionOutput.appendChild(title);
+
       const names = await getFunctionNames(file);
 
       if (!names.length) {
-        functionOutput.innerHTML = '<div style="padding:6px 0;">No functions found.</div>';
+        functionOutput.innerHTML += '<div style="padding:6px 0;">No functions found.</div>';
         return;
       }
 
@@ -759,6 +913,7 @@
       });
     }
 
+    // 🔄 MODIFIED: Function detail (mode-aware)
     async function renderFunctionDetail(file, displayName) {
       functionOutput.innerHTML = '';
 
@@ -771,77 +926,113 @@
         return;
       }
 
-      // Back
       const backBtn = document.createElement('button');
       backBtn.textContent = '← Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderFunctionList(file);
       functionOutput.appendChild(backBtn);
 
-      // Title
       const title = document.createElement('div');
-      title.textContent = `${displayName} — (${file})`;
+      if (currentMode === 'replace') {
+        title.textContent = `🔄 Replace: ${displayName} — (${file})`;
+      } else {
+        title.textContent = `➕ Insert After: ${displayName} — (${file})`;
+      }
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
       functionOutput.appendChild(title);
 
-      // Current (readonly)
-      const currentBox = document.createElement('textarea');
-      currentBox.value = source;
-      currentBox.readOnly = true;
-      currentBox.style.width = '100%';
-      currentBox.style.minHeight = '150px';
-      currentBox.style.marginBottom = '10px';
-      functionOutput.appendChild(currentBox);
+      if (currentMode === 'replace') {
+        // REPLACE MODE: Show current code (readonly)
+        const currentBox = document.createElement('textarea');
+        currentBox.value = source;
+        currentBox.readOnly = true;
+        currentBox.style.width = '100%';
+        currentBox.style.minHeight = '150px';
+        currentBox.style.marginBottom = '10px';
+        currentBox.style.background = '#f5f5f5';
+        functionOutput.appendChild(currentBox);
+      } else {
+        // INSERT AFTER MODE: Show where insertion will happen
+        const info = document.createElement('div');
+        info.textContent = `New code will be inserted after this function's closing brace.`;
+        info.style.padding = '8px';
+        info.style.background = '#fff3cd';
+        info.style.border = '1px solid #ffc107';
+        info.style.borderRadius = '4px';
+        info.style.marginBottom = '10px';
+        functionOutput.appendChild(info);
+      }
 
-      // Replacement (blank by default)
+      // New code box
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
-      replaceBox.placeholder = 'Paste your replacement function block here…';
+      replaceBox.placeholder = currentMode === 'replace' 
+        ? 'Paste replacement function here…' 
+        : 'Paste new function to insert after selected function…';
       replaceBox.style.width = '100%';
       replaceBox.style.minHeight = '180px';
       replaceBox.style.marginBottom = '10px';
       functionOutput.appendChild(replaceBox);
 
-      // Buttons row
+      // Buttons
       const btnRow = document.createElement('div');
       btnRow.style.display = 'flex';
       btnRow.style.gap = '8px';
       btnRow.style.flexWrap = 'wrap';
 
-      const copyBtn = document.createElement('button');
-      copyBtn.textContent = 'Copy current code';
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(currentBox.value);
-          setResult('✅ Copied current function to clipboard.');
-        } catch {
-          setResult('⚠️ Copy failed (iOS sometimes blocks clipboard). You can still select+copy manually.');
-        }
-      };
+      if (currentMode === 'replace') {
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = 'Copy current code';
+        copyBtn.onclick = async () => {
+          try {
+            await navigator.clipboard.writeText(source);
+            setResult('✅ Copied current function to clipboard.');
+          } catch {
+            setResult('⚠️ Copy failed. Select and copy manually.');
+          }
+        };
+        btnRow.appendChild(copyBtn);
+      }
 
       const makePatchBtn = document.createElement('button');
       makePatchBtn.textContent = 'Make Patch JSON';
       makePatchBtn.onclick = () => {
-        const replacement = replaceBox.value.trim();
-        if (!replacement) {
-          setResult('❌ Paste replacement code into the second box first.');
+        const newCode = replaceBox.value.trim();
+        if (!newCode) {
+          setResult('❌ Paste code in the box first.');
           return;
         }
-        const patch = {
-          owner: GH_DEFAULTS.owner,
-          repo: GH_DEFAULTS.repo,
-          branch: GH_DEFAULTS.branch,
-          filePath: file,
-          find: currentBox.value,
-          replace: replacement,
-          commitMessage: `Tailor patch: update ${funcName}`
-        };
+
+        let patch;
+        if (currentMode === 'replace') {
+          // REPLACE: find old function, replace with new
+          patch = {
+            owner: GH_DEFAULTS.owner,
+            repo: GH_DEFAULTS.repo,
+            branch: GH_DEFAULTS.branch,
+            filePath: file,
+            find: source,
+            replace: newCode,
+            commitMessage: `Tailor: replace ${funcName}`
+          };
+        } else {
+          // INSERT AFTER: find old function, replace with old + new
+          patch = {
+            owner: GH_DEFAULTS.owner,
+            repo: GH_DEFAULTS.repo,
+            branch: GH_DEFAULTS.branch,
+            filePath: file,
+            find: source,
+            replace: source + '\n\n' + newCode,
+            commitMessage: `Tailor: insert after ${funcName}`
+          };
+        }
+
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated below. Now press Dry Run.');
+        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
       };
 
-      btnRow.appendChild(copyBtn);
       btnRow.appendChild(makePatchBtn);
       functionOutput.appendChild(btnRow);
     }
@@ -850,8 +1041,6 @@
 
     functionBtn.addEventListener('click', async () => {
       try {
-        const file = fileSelect?.value || 'app.js';
-
         if (open) {
           functionOutput.innerHTML = '';
           functionBtn.textContent = 'Functions ▾';
@@ -860,17 +1049,16 @@
         }
 
         functionBtn.textContent = 'Loading…';
-        await renderFunctionList(file);
+        renderModeSelector();
         functionBtn.textContent = 'Functions ▴';
         open = true;
       } catch (e) {
-        functionOutput.innerHTML = '<div style="padding:6px 0;">Error loading file. (Is token saved?)</div>';
+        functionOutput.innerHTML = '<div style="padding:6px 0;">Error. Is token saved?</div>';
         functionBtn.textContent = 'Functions ▾';
         open = false;
       }
     });
 
-    // initial state
     loadTokenFromLocal();
   }
 })();
