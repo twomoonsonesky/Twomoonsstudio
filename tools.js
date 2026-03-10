@@ -317,14 +317,14 @@
       const orientationIcon =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationIcon
-          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±');
+          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ±');
 
       const orientationName =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationName
           : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-      const viewIcon = zoomedNow ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ';
+      const viewIcon = zoomedNow ? 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -333,14 +333,14 @@
         <div style="text-align:center; margin-bottom: 15px;">
           <strong style="font-size: 16px;">Visual Editor</strong><br>
           <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-            ${orientationIcon} ${orientationName} ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
+            ${orientationIcon} ${orientationName} ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
           </div>
-          <em style="font-size: 12px;">Drag to move ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
+          <em style="font-size: 12px;">Drag to move ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
-          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
-          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Close</button>
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Close</button>
         </div>
 
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
@@ -348,7 +348,7 @@
 
       currentViewElements.forEach((el) => {
         const name = el.dataset.editName || el.id;
-        const icon = el.dataset.editIcon || 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦';
+        const icon = el.dataset.editIcon || 'ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¦';
         const config = layout[el.id];
         if (!config) return;
 
@@ -369,9 +369,9 @@
       saveBtn?.addEventListener('click', async () => {
         try {
           await saveLayoutToFirebase();
-          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Layout saved!');
+          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Layout saved!');
         } catch (e) {
-          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
+          alert('ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
         }
         exitEditMode();
       });
@@ -411,7 +411,7 @@
     const fileSelect = document.getElementById('tailor-file');
     const functionBtn = document.getElementById('tailor-go');
 
-    // 🎯 UPGRADE: Populate file dropdown dynamically with ALL files!
+    // ð¯ UPGRADE: Populate file dropdown dynamically with ALL files!
     if (fileSelect) {
       fileSelect.innerHTML = '';
       const files = ['app.js', 'tools.js', 'index.html', 'styles.css', 'firebase-config.js'];
@@ -434,7 +434,7 @@
 
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
-    // 🆕 CURRENT MODE STATE
+    // ð CURRENT MODE STATE
     let currentMode = 'replace'; // 'replace' | 'insertAfter' | 'append' | 'viewFull' | 'editSection'
 
     function setResult(text) {
@@ -446,7 +446,7 @@
     function loadTokenFromLocal() {
       const t = localStorage.getItem(STORAGE_KEY);
       if (t) {
-        status && (status.textContent = '✅ Token saved on this iPad');
+        status && (status.textContent = 'â Token saved on this iPad');
         if (tokenInput) tokenInput.value = t;
       } else {
         status && (status.textContent = 'No token saved yet.');
@@ -520,19 +520,26 @@
     }
 
     async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}`;
-      const body = {
-        message,
-        content: btoa(unescape(encodeURIComponent(String(newText)))),
-        sha,
-        branch
-      };
-      return ghRequest(token, url, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-    }
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}`;
+  
+  // Modern UTF-8 safe base64 encoding
+  const bytes = new TextEncoder().encode(String(newText));
+  const binString = Array.from(bytes, (byte) => String.fromCodePoint(byte)).join("");
+  const base64Content = btoa(binString);
+  
+  const body = {
+    message,
+    content: base64Content,
+    sha,
+    branch
+  };
+  
+  return ghRequest(token, url, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
 
     // Close overlay
     closeBtn?.addEventListener('click', () => {
@@ -551,7 +558,7 @@
         return;
       }
       localStorage.setItem(STORAGE_KEY, t);
-      status && (status.textContent = '✅ Token saved on this iPad');
+      status && (status.textContent = 'â Token saved on this iPad');
       setResult('Token saved.');
     });
 
@@ -565,7 +572,7 @@
     // Patch buttons
     dryRunBtn?.addEventListener('click', async () => {
       try {
-        setResult('Dry run…');
+        setResult('Dry runâ¦');
         const token = requireToken();
         const patch = parsePatch();
 
@@ -573,19 +580,19 @@
         const { count } = applyReplace(decoded, patch.find, patch.replace);
 
         if (count === 0) {
-          setResult(`❌ Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
+          setResult(`â Dry Run: find-text not found in ${patch.filePath}\n\nTip: generate the find-text from GitHub (Function Finder now does).`);
           return;
         }
 
-        setResult(`✅ Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
+        setResult(`â Dry Run OK\nFile: ${patch.filePath}\nReplacements: ${count}\n\n(No commit made.)`);
       } catch (e) {
-        setResult('❌ ' + (e?.message || e));
+        setResult('â ' + (e?.message || e));
       }
     });
 
     commitBtn?.addEventListener('click', async () => {
       try {
-        setResult('Committing patch…');
+        setResult('Committing patchâ¦');
         const token = requireToken();
         const patch = parsePatch();
 
@@ -593,7 +600,7 @@
         const { updated, count } = applyReplace(before.decoded, patch.find, patch.replace);
 
         if (count === 0) {
-          setResult(`❌ Commit blocked: find-text not found in ${patch.filePath}`);
+          setResult(`â Commit blocked: find-text not found in ${patch.filePath}`);
           return;
         }
 
@@ -601,7 +608,7 @@
 
         const same = normalizeNewlines(latest.decoded) === normalizeNewlines(updated);
         if (same) {
-          setResult(`ℹ️ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
+          setResult(`â¹ï¸ No changes to commit.\nFile: ${patch.filePath}\n(Replacement produced identical content.)`);
           return;
         }
 
@@ -616,9 +623,9 @@
           latest.sha
         );
 
-        setResult(`✅ Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
+        setResult(`â Patch committed!\nFile: ${patch.filePath}\nReplacements: ${count}\n\nRefresh your page to load the new code.`);
       } catch (e) {
-        setResult('❌ ' + (e?.message || e));
+        setResult('â ' + (e?.message || e));
       }
     });
 
@@ -717,7 +724,7 @@
       return null;
     }
 
-    // 🆕 EXTRACT SECTIONS FROM HTML/CSS FILES
+    // ð EXTRACT SECTIONS FROM HTML/CSS FILES
     function getSectionNames(text) {
       const sections = [];
       
@@ -738,7 +745,7 @@
       return [...new Set(sections)].sort();
     }
 
-    // 🆕 EXTRACT SECTION CONTENT
+    // ð EXTRACT SECTION CONTENT
     function extractSectionContent(text, sectionName) {
       // Try HTML comment pattern first
       const htmlStart = `<!-- ${sectionName}_START -->`;
@@ -765,7 +772,7 @@
       return null;
     }
 
-    // 🆕 MODE SELECTOR UI (UPDATED WITH 5TH MODE!)
+    // ð MODE SELECTOR UI (UPDATED WITH 5TH MODE!)
     function renderModeSelector() {
       functionOutput.innerHTML = '';
       
@@ -773,17 +780,17 @@
       const isHtmlCss = file === 'index.html' || file === 'styles.css';
       
       const title = document.createElement('div');
-      title.textContent = '✂️ Choose Edit Mode:';
+      title.textContent = 'âï¸ Choose Edit Mode:';
       title.style.fontWeight = 'bold';
       title.style.marginBottom = '12px';
       functionOutput.appendChild(title);
 
       const modes = [
-        { id: 'replace', label: '🔄 Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'insertAfter', label: '➕ Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'append', label: '📝 Append to End', desc: 'Add new code at end of file', showFor: 'all' },
-        { id: 'editSection', label: '📍 Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
-        { id: 'viewFull', label: '📄 View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' }
+        { id: 'replace', label: 'ð Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'insertAfter', label: 'â Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'append', label: 'ð Append to End', desc: 'Add new code at end of file', showFor: 'all' },
+        { id: 'editSection', label: 'ð Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
+        { id: 'viewFull', label: 'ð View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' }
       ];
 
       modes.forEach(mode => {
@@ -819,7 +826,7 @@
       });
     }
 
-    // 🆕 START EDIT MODE BASED ON SELECTION (UPDATED!)
+    // ð START EDIT MODE BASED ON SELECTION (UPDATED!)
     async function startEditMode() {
       const file = fileSelect?.value || 'app.js';
 
@@ -835,26 +842,26 @@
       }
     }
 
-    // 🆕 RENDER SECTION LIST
+    // ð RENDER SECTION LIST
     async function renderSectionList(file) {
       functionOutput.innerHTML = '';
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Change Mode';
+      backBtn.textContent = 'â Change Mode';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = renderModeSelector;
       functionOutput.appendChild(backBtn);
 
       const title = document.createElement('div');
-      title.textContent = `📍 Edit Sections: ${file}`;
+      title.textContent = `ð Edit Sections: ${file}`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0 12px 0';
       functionOutput.appendChild(title);
 
-      functionBtn.textContent = 'Loading…';
+      functionBtn.textContent = 'Loadingâ¦';
       const text = await getFileText(file);
       const sections = getSectionNames(text);
-      functionBtn.textContent = 'Functions ▴';
+      functionBtn.textContent = 'Functions â´';
 
       if (!sections.length) {
         functionOutput.innerHTML += '<div style="padding:6px 0;">No marked sections found in this file.</div>';
@@ -876,7 +883,7 @@
       });
     }
 
-    // 🆕 RENDER SECTION DETAIL
+    // ð RENDER SECTION DETAIL
     async function renderSectionDetail(file, sectionName, fullText) {
       functionOutput.innerHTML = '';
 
@@ -888,13 +895,13 @@
       }
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Back';
+      backBtn.textContent = 'â Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderSectionList(file);
       functionOutput.appendChild(backBtn);
 
       const title = document.createElement('div');
-      title.textContent = `📍 Section: ${sectionName.replace(/_/g, ' ')} — (${file})`;
+      title.textContent = `ð Section: ${sectionName.replace(/_/g, ' ')} â (${file})`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
       functionOutput.appendChild(title);
@@ -970,7 +977,7 @@
       // New code box
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
-      replaceBox.placeholder = 'Paste new code here…';
+      replaceBox.placeholder = 'Paste new code hereâ¦';
       replaceBox.style.width = '100%';
       replaceBox.style.minHeight = '180px';
       replaceBox.style.marginBottom = '10px';
@@ -984,7 +991,7 @@
       makePatchBtn.onclick = () => {
         const newCode = replaceBox.value.trim();
         if (!newCode) {
-          setResult('❌ Paste code in the box first.');
+          setResult('â Paste code in the box first.');
           return;
         }
 
@@ -1014,31 +1021,31 @@
         }
 
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+        setResult('â Patch JSON generated. Press Dry Run to verify.');
       };
 
       functionOutput.appendChild(makePatchBtn);
     }
 
-    // 🆕 VIEW FULL FILE MODE
+    // ð VIEW FULL FILE MODE
     async function renderViewFullMode(file) {
       functionOutput.innerHTML = '';
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Change Mode';
+      backBtn.textContent = 'â Change Mode';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = renderModeSelector;
       functionOutput.appendChild(backBtn);
 
       const title = document.createElement('div');
-      title.textContent = `📄 Full File: ${file}`;
+      title.textContent = `ð Full File: ${file}`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0 12px 0';
       functionOutput.appendChild(title);
 
-      functionBtn.textContent = 'Loading…';
+      functionBtn.textContent = 'Loadingâ¦';
       const text = await getFileText(file);
-      functionBtn.textContent = 'Functions ▴';
+      functionBtn.textContent = 'Functions â´';
 
       const editBox = document.createElement('textarea');
       editBox.value = text;
@@ -1062,33 +1069,33 @@
           commitMessage: `Tailor: edit full file ${file}`
         };
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+        setResult('â Patch JSON generated. Press Dry Run to verify.');
       };
       functionOutput.appendChild(makePatchBtn);
     }
 
-    // 🆕 APPEND MODE
+    // ð APPEND MODE
     async function renderAppendMode(file) {
       functionOutput.innerHTML = '';
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Change Mode';
+      backBtn.textContent = 'â Change Mode';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = renderModeSelector;
       functionOutput.appendChild(backBtn);
 
       const title = document.createElement('div');
-      title.textContent = `📝 Append to End: ${file}`;
+      title.textContent = `ð Append to End: ${file}`;
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0 12px 0';
       functionOutput.appendChild(title);
 
-      functionBtn.textContent = 'Loading…';
+      functionBtn.textContent = 'Loadingâ¦';
       const text = await getFileText(file);
-      functionBtn.textContent = 'Functions ▴';
+      functionBtn.textContent = 'Functions â´';
 
       const newCodeBox = document.createElement('textarea');
-      newCodeBox.placeholder = 'Paste new code to append at end of file…';
+      newCodeBox.placeholder = 'Paste new code to append at end of fileâ¦';
       newCodeBox.style.width = '100%';
       newCodeBox.style.minHeight = '200px';
       newCodeBox.style.fontFamily = 'monospace';
@@ -1100,7 +1107,7 @@
       makePatchBtn.onclick = () => {
         const newCode = newCodeBox.value.trim();
         if (!newCode) {
-          setResult('❌ Paste code to append first.');
+          setResult('â Paste code to append first.');
           return;
         }
         const patch = {
@@ -1113,22 +1120,22 @@
           commitMessage: `Tailor: append to ${file}`
         };
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+        setResult('â Patch JSON generated. Press Dry Run to verify.');
       };
       functionOutput.appendChild(makePatchBtn);
     }
 
-    // 🔄 MODIFIED: Function list (mode-aware)
+    // ð MODIFIED: Function list (mode-aware)
     async function renderFunctionList(file) {
       functionOutput.innerHTML = '';
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Change Mode';
+      backBtn.textContent = 'â Change Mode';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = renderModeSelector;
       functionOutput.appendChild(backBtn);
 
-      const modeLabel = currentMode === 'replace' ? '🔄 Replace' : '➕ Insert After';
+      const modeLabel = currentMode === 'replace' ? 'ð Replace' : 'â Insert After';
       const title = document.createElement('div');
       title.textContent = `${modeLabel}: ${file}`;
       title.style.fontWeight = 'bold';
@@ -1157,7 +1164,7 @@
       });
     }
 
-    // 🔄 MODIFIED: Function detail (mode-aware)
+    // ð MODIFIED: Function detail (mode-aware)
     async function renderFunctionDetail(file, displayName) {
       functionOutput.innerHTML = '';
 
@@ -1171,16 +1178,16 @@
       }
 
       const backBtn = document.createElement('button');
-      backBtn.textContent = '← Back';
+      backBtn.textContent = 'â Back';
       backBtn.style.marginBottom = '10px';
       backBtn.onclick = () => renderFunctionList(file);
       functionOutput.appendChild(backBtn);
 
       const title = document.createElement('div');
       if (currentMode === 'replace') {
-        title.textContent = `🔄 Replace: ${displayName} — (${file})`;
+        title.textContent = `ð Replace: ${displayName} â (${file})`;
       } else {
-        title.textContent = `➕ Insert After: ${displayName} — (${file})`;
+        title.textContent = `â Insert After: ${displayName} â (${file})`;
       }
       title.style.fontWeight = 'bold';
       title.style.margin = '6px 0';
@@ -1212,8 +1219,8 @@
       const replaceBox = document.createElement('textarea');
       replaceBox.value = '';
       replaceBox.placeholder = currentMode === 'replace' 
-        ? 'Paste replacement function here…' 
-        : 'Paste new function to insert after selected function…';
+        ? 'Paste replacement function hereâ¦' 
+        : 'Paste new function to insert after selected functionâ¦';
       replaceBox.style.width = '100%';
       replaceBox.style.minHeight = '180px';
       replaceBox.style.marginBottom = '10px';
@@ -1231,9 +1238,9 @@
         copyBtn.onclick = async () => {
           try {
             await navigator.clipboard.writeText(source);
-            setResult('✅ Copied current function to clipboard.');
+            setResult('â Copied current function to clipboard.');
           } catch {
-            setResult('⚠️ Copy failed. Select and copy manually.');
+            setResult('â ï¸ Copy failed. Select and copy manually.');
           }
         };
         btnRow.appendChild(copyBtn);
@@ -1244,7 +1251,7 @@
       makePatchBtn.onclick = () => {
         const newCode = replaceBox.value.trim();
         if (!newCode) {
-          setResult('❌ Paste code in the box first.');
+          setResult('â Paste code in the box first.');
           return;
         }
 
@@ -1274,7 +1281,7 @@
         }
 
         if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
-        setResult('✅ Patch JSON generated. Press Dry Run to verify.');
+        setResult('â Patch JSON generated. Press Dry Run to verify.');
       };
 
       btnRow.appendChild(makePatchBtn);
@@ -1287,18 +1294,18 @@
       try {
         if (open) {
           functionOutput.innerHTML = '';
-          functionBtn.textContent = 'Functions ▾';
+          functionBtn.textContent = 'Functions â¾';
           open = false;
           return;
         }
 
-        functionBtn.textContent = 'Loading…';
+        functionBtn.textContent = 'Loadingâ¦';
         renderModeSelector();
-        functionBtn.textContent = 'Functions ▴';
+        functionBtn.textContent = 'Functions â´';
         open = true;
       } catch (e) {
         functionOutput.innerHTML = '<div style="padding:6px 0;">Error. Is token saved?</div>';
-        functionBtn.textContent = 'Functions ▾';
+        functionBtn.textContent = 'Functions â¾';
         open = false;
       }
     });
