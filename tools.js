@@ -317,14 +317,14 @@
       const orientationIcon =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationIcon
-          : (window.innerWidth > window.innerHeight ? 'ÃÂ°ÃÂÃÂÃÂ¥ÃÂ¯ÃÂ¸ÃÂ' : 'ÃÂ°ÃÂÃÂÃÂ±');
+          : (window.innerWidth > window.innerHeight ? 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¥ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ' : 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ±');
 
       const orientationName =
         (typeof ctx.getOrientationMeta === 'function')
           ? ctx.getOrientationMeta().orientationName
           : (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
 
-      const viewIcon = zoomedNow ? 'ÃÂ°ÃÂÃÂÃÂ' : 'ÃÂ°ÃÂÃÂÃÂ ';
+      const viewIcon = zoomedNow ? 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ' : 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ ';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -333,14 +333,14 @@
         <div style="text-align:center; margin-bottom: 15px;">
           <strong style="font-size: 16px;">Visual Editor</strong><br>
           <div style="background: rgba(180, 140, 255, 0.15); padding: 10px; border-radius: 8px; margin: 10px 0;">
-            ${orientationIcon} ${orientationName} ÃÂ¢ÃÂÃÂ¢ ${viewIcon} ${viewName}
+            ${orientationIcon} ${orientationName} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ ${viewIcon} ${viewName}
           </div>
-          <em style="font-size: 12px;">Drag to move ÃÂ¢ÃÂÃÂ¢ Pinch to resize</em>
+          <em style="font-size: 12px;">Drag to move ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¢ Pinch to resize</em>
         </div>
 
         <div style="display:flex; gap:8px; margin-bottom:15px;">
-          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂ°ÃÂÃÂÃÂ¾ Save</button>
-          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂ¢ÃÂÃÂ Close</button>
+          <button id="__tm_save_btn" style="flex:1; padding:12px; background: rgba(100, 200, 100, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¾ Save</button>
+          <button id="__tm_close_btn" style="flex:1; padding:12px; background: rgba(150, 150, 150, 0.9); color:white; border:none; border-radius: 8px; font-size:14px; cursor:pointer; font-weight:bold;">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Close</button>
         </div>
 
         <div style="font-size: 12px; line-height: 1.8; color: #555;">
@@ -348,7 +348,7 @@
 
       currentViewElements.forEach((el) => {
         const name = el.dataset.editName || el.id;
-        const icon = el.dataset.editIcon || 'ÃÂ°ÃÂÃÂÃÂ¦';
+        const icon = el.dataset.editIcon || 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¦';
         const config = layout[el.id];
         if (!config) return;
 
@@ -369,9 +369,9 @@
       saveBtn?.addEventListener('click', async () => {
         try {
           await saveLayoutToFirebase();
-          alert('ÃÂ¢ÃÂÃÂ Layout saved!');
+          alert('ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Layout saved!');
         } catch (e) {
-          alert('ÃÂ¢ÃÂÃÂ Could not save: ' + (e?.message || e));
+          alert('ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Could not save: ' + (e?.message || e));
         }
         exitEditMode();
       });
@@ -387,6 +387,13 @@
   // Tailor System (token + patch + function viewer)
   // ------------------------------------------------------------
   function initTailor(ctx) {
+    // Prevent double-init at function level!
+    if (window.__TAILOR_INITIALIZED__) {
+      console.log('Tailor already initialized, skipping...');
+      return;
+    }
+    window.__TAILOR_INITIALIZED__ = true;
+    
     const overlay = document.getElementById('tailorOverlay');
     const closeBtn = document.getElementById('tailorCloseBtn');
 
@@ -428,10 +435,10 @@
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
     function setResult(text) {
-  const now = new Date();
-  const time = now.toLocaleTimeString();
-  result.textContent = `[${time}] ${text}`;
-}
+      const now = new Date();
+      const time = now.toLocaleTimeString();
+      result.textContent = `[${time}] ${text}`;
+    }
 
     function loadTokenFromLocal() {
       const t = localStorage.getItem(STORAGE_KEY);
@@ -577,13 +584,6 @@
     });
 
     // ✅ COMMIT: double-fetch sha + no-op detection
-	    // Prevent duplicate listeners (stops 409 errors!)
-    if (commitBtn && commitBtn.__tailor_listener_added__) {
-      setResult('Already processing...');
-      return;
-    }
-    if (commitBtn) commitBtn.__tailor_listener_added__ = true;
-
     commitBtn?.addEventListener('click', async () => {
       try {
         setResult('Committing patch…');
@@ -676,65 +676,64 @@
     }
 
     function extractFunctionSource(text, funcName) {
-  // Escape function name for regex safety
-  const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Escape function name for regex safety
+      const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  // Match common function-start forms:
-  // 1) function name(...) OR async function name(...)
-  // 2) const name = (...) => OR const name = async (...) =>
-  // 3) const name = function(...) OR const name = async function(...)
-  const patterns = [
-    new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
-    new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?\\([^)]*\\)\\s*=>\\s*\\{`, 'm'),
-    new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?function\\s*\\([^)]*\\)\\s*\\{`, 'm'),
-  ];
+      // Match common function-start forms:
+      // 1) function name(...) OR async function name(...)
+      // 2) const name = (...) => OR const name = async (...) =>
+      // 3) const name = function(...) OR const name = async function(...)
+      const patterns = [
+        new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+        new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?\\([^)]*\\)\\s*=>\\s*\\{`, 'm'),
+        new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?function\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+      ];
 
-  let match = null;
-  for (const rx of patterns) {
-    match = text.match(rx);
-    if (match) break;
-  }
-  if (!match) return null;
+      let match = null;
+      for (const rx of patterns) {
+        match = text.match(rx);
+        if (match) break;
+      }
+      if (!match) return null;
 
-  const startIndex = match.index;
-  const braceIndex = text.indexOf('{', startIndex);
-  if (braceIndex < 0) return null;
+      const startIndex = match.index;
+      const braceIndex = text.indexOf('{', startIndex);
+      if (braceIndex < 0) return null;
 
-  // Brace matching while ignoring strings/comments
-  let depth = 0;
-  let inS = false, inD = false, inT = false;     // ', ", `
-  let inLine = false, inBlock = false;           // //, /* */
-  let esc = false;
+      // Brace matching while ignoring strings/comments
+      let depth = 0;
+      let inS = false, inD = false, inT = false;     // ', ", `
+      let inLine = false, inBlock = false;           // //, /* */
+      let esc = false;
 
-  for (let i = braceIndex; i < text.length; i++) {
-    const c = text[i];
-    const n = text[i + 1];
+      for (let i = braceIndex; i < text.length; i++) {
+        const c = text[i];
+        const n = text[i + 1];
 
-    if (inLine) { if (c === '\n') inLine = false; continue; }
-    if (inBlock) { if (c === '*' && n === '/') { inBlock = false; i++; } continue; }
+        if (inLine) { if (c === '\n') inLine = false; continue; }
+        if (inBlock) { if (c === '*' && n === '/') { inBlock = false; i++; } continue; }
 
-    if (!inS && !inD && !inT) {
-      if (c === '/' && n === '/') { inLine = true; i++; continue; }
-      if (c === '/' && n === '*') { inBlock = true; i++; continue; }
+        if (!inS && !inD && !inT) {
+          if (c === '/' && n === '/') { inLine = true; i++; continue; }
+          if (c === '/' && n === '*') { inBlock = true; i++; continue; }
+        }
+
+        if (inS) { if (!esc && c === "'") inS = false; esc = (!esc && c === '\\'); continue; }
+        if (inD) { if (!esc && c === '"') inD = false; esc = (!esc && c === '\\'); continue; }
+        if (inT) { if (!esc && c === '`') inT = false; esc = (!esc && c === '\\'); continue; }
+
+        if (c === "'") { inS = true; esc = false; continue; }
+        if (c === '"') { inD = true; esc = false; continue; }
+        if (c === '`') { inT = true; esc = false; continue; }
+
+        if (c === '{') depth++;
+        if (c === '}') depth--;
+
+        if (depth === 0) return text.slice(startIndex, i + 1);
+      }
+
+      return null;
     }
-
-    if (inS) { if (!esc && c === "'") inS = false; esc = (!esc && c === '\\'); continue; }
-    if (inD) { if (!esc && c === '"') inD = false; esc = (!esc && c === '\\'); continue; }
-    if (inT) { if (!esc && c === '`') inT = false; esc = (!esc && c === '\\'); continue; }
-
-    if (c === "'") { inS = true; esc = false; continue; }
-    if (c === '"') { inD = true; esc = false; continue; }
-    if (c === '`') { inT = true; esc = false; continue; }
-
-    if (c === '{') depth++;
-    if (c === '}') depth--;
-
-    if (depth === 0) return text.slice(startIndex, i + 1);
-  }
-
-  return null;
-}
-
 
     async function renderFunctionList(file) {
       functionOutput.innerHTML = '';
