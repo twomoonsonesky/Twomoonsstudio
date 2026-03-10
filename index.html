@@ -2,17 +2,21 @@
 <html lang="en">
 
 <head>
+	<!-- HEAD_START -->
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Two Moons Studio</title>
 	<link rel="stylesheet" href="styles.css?v=5">
+	<!-- HEAD_END -->
 </head>
 
 <body>
 
-	<!-- One button, two options -->
+	<!-- EDIT_BUTTON_START -->
 	<button id="editModeBtn">Edit</button>
+	<!-- EDIT_BUTTON_END -->
 
+	<!-- EDIT_MENU_START -->
 	<div id="editMenu" class="hidden" style="
     position: absolute;
     top: 60px;
@@ -29,28 +33,43 @@
 		<button id="editLayoutOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">✏️ Edit layout</button>
 		<button id="editCodeOption" style="padding:10px;border-radius:8px;border:0;background:#eee;">🧵 Edit code</button>
 	</div>
+	<!-- EDIT_MENU_END -->
 
+	<!-- LAYOUT_INFO_START -->
 	<div id="layoutInfo" class="layout-info hidden">
 		<div class="layout-info-content"></div>
 	</div>
+	<!-- LAYOUT_INFO_END -->
 
+	<!-- GRID_OVERLAY_START -->
 	<div id="grid-overlay" class="grid-overlay hidden"></div>
+	<!-- GRID_OVERLAY_END -->
 
+	<!-- LANDING_CONTAINER_START -->
 	<div id="landing-container" class="landing-container">
+		<!-- BACKGROUND_LAYERS_START -->
 		<div id="background" class="background-layer"></div>
 		<div id="dusk-overlay" class="dusk-layer"></div>
+		<!-- BACKGROUND_LAYERS_END -->
 
+		<!-- COTTAGE_ELEMENTS_START -->
 		<img id="cottage-small" src="spring cottage.png" class="editable-element cottage-element" data-edit-name="Cottage (small)" data-edit-icon="🏠" data-edit-view="normal" alt="Cottage">
 
 		<img id="cottage-zoomed" src="spring cottage.png" class="editable-element cottage-element zoom-element hidden" data-edit-name="Cottage (zoomed)" data-edit-icon="🔍" data-edit-view="zoomed" alt="Cottage zoomed">
+		<!-- COTTAGE_ELEMENTS_END -->
 
+		<!-- LIGHTS_ELEMENT_START -->
 		<img id="lights" src="spring cottage lights.png" class="lights-element" alt="Cottage lights">
+		<!-- LIGHTS_ELEMENT_END -->
 
+		<!-- SOLENA_ORB_START -->
 		<div id="solena-orb" class="editable-element orb-element" data-edit-name="Solena Orb" data-edit-icon="✨" data-edit-view="normal">
 		</div>
+		<!-- SOLENA_ORB_END -->
 	</div>
+	<!-- LANDING_CONTAINER_END -->
 
-	<!-- Solena chat -->
+	<!-- SOLENA_CHAT_START -->
 	<div id="solena-chat" class="chat-overlay hidden">
 		<div class="chat-container">
 			<div class="chat-header">
@@ -74,8 +93,9 @@
 			</div>
 		</div>
 	</div>
+	<!-- SOLENA_CHAT_END -->
 
-	<!-- Tailor overlay -->
+	<!-- TAILOR_OVERLAY_START -->
 	<div id="tailorOverlay" style="
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.35);
@@ -171,10 +191,13 @@
       "></pre>
 		</div>
 	</div>
+	<!-- TAILOR_OVERLAY_END -->
 
+	<!-- SCRIPTS_START -->
 	<!-- IMPORTANT: tools.js first, then app.js -->
 	<script type="module" src="tools.js?v=5"></script>
 	<script type="module" src="app.js?v=5"></script>
+	<!-- SCRIPTS_END -->
 </body>
 
 </html>
