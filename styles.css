@@ -178,6 +178,38 @@ body {
 /* ORB_STYLES_END */
 
 /* EDIT_MODE_STYLES_START */
+/* Hidden class */
+.hidden {
+    display: none !important;
+}
+
+/* Edit Mode Button */
+#editModeBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 12px 24px;
+    background: rgba(100, 150, 255, 0.9);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 2000;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+#editModeBtn:hover {
+    background: rgba(100, 150, 255, 1);
+    transform: scale(1.05);
+}
+
+#editModeBtn.active {
+    background: rgba(255, 150, 100, 0.9);
+}
+
 .edit-mode-button {
     position: fixed;
     top: 20px;
