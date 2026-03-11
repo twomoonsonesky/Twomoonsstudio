@@ -734,55 +734,114 @@
     }
 
     function renderModeSelector() {
-      functionOutput.innerHTML = '';
-      
-      const file = fileSelect?.value || 'app.js';
-      
-      const title = document.createElement('div');
-      title.textContent = 'Choose Edit Mode:';
-      title.style.fontWeight = 'bold';
-      title.style.marginBottom = '12px';
-      functionOutput.appendChild(title);
+  functionOutput.innerHTML = '';
+  
+  const file = fileSelect?.value || 'app.js';
+  
+  const title = document.createElement('div');
+  title.textContent = 'Choose Edit Mode:';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
 
-      const modes = [
-        { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
-        { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
-        { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' }
-      ];
+  const modes = [
+    { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+    { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+    { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
+    { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
+    { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
+    { id: 'debugContext', label: '🔍 Debug Context', desc: 'Find all code related to an element', showFor: 'all' }
+  ];
 
-      modes.forEach(mode => {
-        if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
-          return;
-        }
-        
-        const btn = document.createElement('button');
-        btn.textContent = mode.label;
-        btn.style.width = '100%';
-        btn.style.padding = '12px';
-        btn.style.marginBottom = '8px';
-        btn.style.textAlign = 'left';
-        btn.style.cursor = 'pointer';
-        btn.style.border = '2px solid #ccc';
-        btn.style.borderRadius = '6px';
-        btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
-
-        const desc = document.createElement('div');
-        desc.textContent = mode.desc;
-        desc.style.fontSize = '0.85em';
-        desc.style.color = '#666';
-        desc.style.marginTop = '4px';
-        btn.appendChild(desc);
-
-        btn.onclick = () => {
-          currentMode = mode.id;
-          startEditMode();
-        };
-
-        functionOutput.appendChild(btn);
-      });
+  modes.forEach(mode => {
+    if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
+      return;
     }
+    
+    const btn = document.createElement('button');
+    btn.textContent = mode.label;
+    btn.style.width = '100%';
+    btn.style.padding = '12px';
+    btn.style.marginBottom = '8px';
+    btn.style.textAlign = 'left';
+    btn.style.cursor = 'pointer';
+    btn.style.border = '2px solid #ccc';
+    btn.style.borderRadius = '6px';
+    btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
+
+    const desc = document.createElement('div');
+    desc.textContent = mode.desc;
+    desc.style.fontSize = '0.85em';
+    desc.style.color = '#666';
+    desc.style.marginTop = '4px';
+    btn.appendChild(desc);
+
+    btn.onclick = () => {
+      currentMode = mode.id;
+      if (mode.id === 'debugContext') {
+        showDebugContextInput();
+      } else {
+        startEditMode();
+      }
+    };
+
+    functionOutput.appendChild(btn);
+  });
+}
+
+function showDebugContextInput() {
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
+
+  const title = document.createElement('div');
+  title.textContent = '🔍 Debug Context Explorer';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
+
+  const label = document.createElement('div');
+  label.textContent = 'Enter element ID to debug:';
+  label.style.fontSize = '13px';
+  label.style.marginBottom = '8px';
+  functionOutput.appendChild(label);
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.placeholder = 'e.g., uploadAssetsOption';
+  input.style.width = '100%';
+  input.style.padding = '10px';
+  input.style.borderRadius = '8px';
+  input.style.border = '2px solid rgba(180,140,255,0.4)';
+  input.style.marginBottom = '10px';
+  functionOutput.appendChild(input);
+
+  const searchBtn = document.createElement('button');
+  searchBtn.textContent = 'Search All Files';
+  searchBtn.style.width = '100%';
+  searchBtn.style.padding = '12px';
+  searchBtn.style.borderRadius = '8px';
+  searchBtn.style.border = 'none';
+  searchBtn.style.background = '#4CAF50';
+  searchBtn.style.color = 'white';
+  searchBtn.style.fontWeight = 'bold';
+  searchBtn.style.cursor = 'pointer';
+  
+  searchBtn.onclick = () => {
+    const targetId = input.value.trim();
+    if (!targetId) {
+      alert('Please enter an element ID');
+      return;
+    }
+    renderDebugContext(targetId);
+  };
+  
+  functionOutput.appendChild(searchBtn);
+}
 
     async function startEditMode() {
       const file = fileSelect?.value || 'app.js';
@@ -1257,13 +1316,13 @@ async function renderDebugContext(targetId) {
   functionOutput.innerHTML = '';
   
   const backBtn = document.createElement('button');
-  backBtn.textContent = '← Back';
+  backBtn.textContent = 'â Back';
   backBtn.style.marginBottom = '10px';
   backBtn.onclick = renderModeSelector;
   functionOutput.appendChild(backBtn);
 
   const title = document.createElement('div');
-  title.textContent = `🔍 Debug Context: ${targetId}`;
+  title.textContent = `ð Debug Context: ${targetId}`;
   title.style.fontWeight = 'bold';
   title.style.marginBottom = '12px';
   functionOutput.appendChild(title);
@@ -1328,7 +1387,7 @@ async function renderDebugContext(targetId) {
 
     if (results.html) {
       const htmlSection = document.createElement('div');
-      htmlSection.innerHTML = `<strong>📄 HTML Element:</strong>`;
+      htmlSection.innerHTML = `<strong>ð HTML Element:</strong>`;
       htmlSection.style.marginTop = '12px';
       htmlSection.style.marginBottom = '6px';
       functionOutput.appendChild(htmlSection);
@@ -1346,7 +1405,7 @@ async function renderDebugContext(targetId) {
 
     if (results.jsListeners.length > 0) {
       const jsSection = document.createElement('div');
-      jsSection.innerHTML = `<strong>⚡ Event Listeners:</strong>`;
+      jsSection.innerHTML = `<strong>â¡ Event Listeners:</strong>`;
       jsSection.style.marginTop = '12px';
       jsSection.style.marginBottom = '6px';
       functionOutput.appendChild(jsSection);
@@ -1366,7 +1425,7 @@ async function renderDebugContext(targetId) {
 
     if (results.css.length > 0) {
       const cssSection = document.createElement('div');
-      cssSection.innerHTML = `<strong>🎨 CSS Rules:</strong>`;
+      cssSection.innerHTML = `<strong>ð¨ CSS Rules:</strong>`;
       cssSection.style.marginTop = '12px';
       cssSection.style.marginBottom = '6px';
       functionOutput.appendChild(cssSection);
@@ -1385,7 +1444,7 @@ async function renderDebugContext(targetId) {
     }
 
     const copyBtn = document.createElement('button');
-    copyBtn.textContent = '📋 Copy Debug Bundle';
+    copyBtn.textContent = 'ð Copy Debug Bundle';
     copyBtn.style.marginTop = '12px';
     copyBtn.style.padding = '10px';
     copyBtn.style.width = '100%';
@@ -1398,25 +1457,25 @@ async function renderDebugContext(targetId) {
     
     copyBtn.onclick = async () => {
       const bundle = `
-🔍 DEBUG CONTEXT: ${targetId}
+ð DEBUG CONTEXT: ${targetId}
 
-📄 HTML:
+ð HTML:
 ${results.html || 'Not found'}
 
-⚡ EVENT LISTENERS:
+â¡ EVENT LISTENERS:
 ${results.jsListeners.join('\n\n') || 'None found'}
 
-🎨 CSS:
+ð¨ CSS:
 ${results.css.join('\n\n') || 'None found'}
 
-📁 REFERENCES:
+ð REFERENCES:
 ${results.jsReferences.join('\n') || 'None found'}
       `;
       
       try {
         await navigator.clipboard.writeText(bundle);
-        copyBtn.textContent = '✅ Copied!';
-        setTimeout(() => { copyBtn.textContent = '📋 Copy Debug Bundle'; }, 2000);
+        copyBtn.textContent = 'â Copied!';
+        setTimeout(() => { copyBtn.textContent = 'ð Copy Debug Bundle'; }, 2000);
       } catch {
         alert('Copy the text above manually');
       }
