@@ -32,7 +32,6 @@
   // Edit Menu
   // ------------------------------------------------------------
   function initEditMenu(ctx) {
-  const editBtn = document.getElementById('editModeBtn');
   const menu = document.getElementById('editMenu');
   const layoutOption = document.getElementById('editLayoutOption');
   const codeOption = document.getElementById('editCodeOption');
