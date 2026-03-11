@@ -129,50 +129,27 @@
 <!-- UPLOAD_UI_END -->
 
 	<!-- TAILOR_OVERLAY_START -->
-	<div id="tailorOverlay" style="
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(8px);
-      z-index: 4000;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-  ">
-		<div style="
-        width: min(920px, 100%);
-        max-height: 90vh;
-        overflow: auto;
-        background: rgba(255,255,255,0.98);
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-        padding: 16px;
-        font-family: Georgia, serif;
-    ">
-			<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-				<div style="font-size:22px; font-weight:bold;">ð§µâ¨ Tailor</div>
-				<div style="margin-left:auto; display:flex; gap:8px;">
-					<button id="tailorCloseBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#ff6b6b; color:white; font-weight:bold; cursor:pointer;">Close</button>
-				</div>
-			</div>
+<div id="tailorOverlay" class="tailor-overlay" style="display:none;">
+  <div class="tailor-panel">
+    <div class="tailor-header">
+      <h2>[TAILOR]</h2>
+      <button id="tailorCloseBtn" class="tailor-close">X</button>
+    </div>
 
-			<div style="font-size:13px; color:#444; line-height:1.5; margin-bottom:12px;">
-				Paste your GitHub token once (it stays on this iPad). Then paste a patch JSON. Use <b>Dry Run</b> first, then <b>Commit Patch</b>.
-			</div>
+    <div class="tailor-content">
+      <div class="tailor-section">
+        <h3>GitHub Token (fine-grained PAT)</h3>
+        <input type="password" id="tailorToken" placeholder="Paste token here">
+        <div class="tailor-button-row">
+          <button id="tailorSaveTokenBtn">Save Token</button>
+          <button id="tailorClearTokenBtn">Clear Token</button>
+        </div>
+        <div id="tailorTokenStatus">Token saved on this iPad</div>
+      </div>
 
-			<div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
-				<label style="font-size:13px; font-weight:bold;">GitHub Token (fine-grained PAT)</label>
-				<input id="tailorToken" type="password" placeholder="Paste token here (saved locally on this iPad)" style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%;" />
-				<div style="display:flex; gap:8px; flex-wrap:wrap;">
-					<button id="tailorSaveTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#6b4fbb; color:white; font-weight:bold; cursor:pointer;">Save Token</button>
-					<button id="tailorClearTokenBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#999; color:white; font-weight:bold; cursor:pointer;">Clear Token</button>
-					<div id="tailorTokenStatus" style="align-self:center; font-size:13px; color:#555;"></div>
-				</div>
-			</div>
-
-			<div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:12px;">
-				<label style="font-size:13px; font-weight:bold;">Patch JSON</label>
-				<textarea id="tailorPatch" rows="10" placeholder='Example:
+      <div class="tailor-section">
+        <h3>Patch JSON</h3>
+        <textarea id="tailorPatch" placeholder='Example:
 {
   "owner": "twomoonsonesky",
   "repo": "Twomoonsstudio",
@@ -181,50 +158,25 @@
   "find": "setInterval(checkTimeAndSetMode, 3600000);",
   "replace": "setInterval(checkTimeAndSetMode, 60 * 1000);",
   "commitMessage": "Tailor patch: update interval"
-}' style="padding:12px; border:2px solid rgba(180,140,255,0.35); border-radius:12px; font-size:14px; width:100%; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;"></textarea>
+}'></textarea>
+        <div class="tailor-button-row">
+          <button id="tailorDryRunBtn">Dry Run</button>
+          <button id="tailorCommitBtn">Commit Patch</button>
+        </div>
+        <div id="tailorResult"></div>
+      </div>
 
-				<!-- Tailor: Function Finder -->
-				<div style="margin-top:16px; padding-top:16px; border-top:1px solid rgba(0,0,0,0.08);">
-					<div style="font-weight:bold; margin-bottom:8px;">ð§µâ¨ Tailor ð Function Finder</div>
-
-					<label style="font-size:12px; display:block; margin-bottom:6px;">Choose file</label>
-					<select id="tailor-file" style="width:100%; padding:10px; border-radius:10px; border:1px solid rgba(0,0,0,0.15);">
-						<option value="app.js" selected>JavaScript (app.js)</option>
-						<option value="tools.js">JavaScript (tools.js)</option>
-						<option value="index.html" disabled>HTML (coming soon)</option>
-						<option value="styles.css" disabled>CSS (coming soon)</option>
-					</select>
-
-					<button id="tailor-go" style="margin-top:10px; width:100%; padding:10px; border:none; border-radius:10px;
-                   background:rgba(100,150,255,0.9); color:white; font-weight:bold; cursor:pointer;">
-						Functions â¾
-					</button>
-
-					<div id="tailor-output" style="margin-top:10px; font-size:12px; max-height:240px; overflow:auto;
-                   background:rgba(0,0,0,0.04); padding:10px; border-radius:10px;">
-					</div>
-				</div>
-
-				<div style="display:flex; gap:8px; flex-wrap:wrap;">
-					<button id="tailorDryRunBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#3b82f6; color:white; font-weight:bold; cursor:pointer;">Dry Run</button>
-					<button id="tailorCommitBtn" style="padding:10px 14px; border:none; border-radius:10px; background:#16a34a; color:white; font-weight:bold; cursor:pointer;">Commit Patch</button>
-				</div>
-			</div>
-
-			<div style="font-size:12px; color:#444; margin-bottom:6px;"><b>Result</b></div>
-			<pre id="tailorResult" style="
-          white-space: pre-wrap;
-          background: rgba(0,0,0,0.06);
-          padding: 12px;
-          border-radius: 12px;
-          font-size: 12px;
-          line-height: 1.4;
-          font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-          min-height: 80px;
-      "></pre>
-		</div>
-	</div>
-	<!-- TAILOR_OVERLAY_END -->
+      <div class="tailor-section">
+        <h3>[FUNCTION FINDER]</h3>
+        <label>Choose file</label>
+        <select id="tailor-file"></select>
+        <button id="tailor-go">Functions</button>
+        <div id="tailor-output"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- TAILOR_OVERLAY_END -->
 
 	<!-- SCRIPTS_START -->
 	<!-- IMPORTANT: tools.js first, then app.js -->
