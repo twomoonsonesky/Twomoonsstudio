@@ -500,6 +500,9 @@ body {
 /* CHAT_INTERFACE_END */
 
 /* UPLOAD_UI_START */
+.upload-hidden {
+    display: none !important;
+}
 
 .upload-overlay {
     position: fixed;
@@ -523,7 +526,7 @@ body {
     pointer-events: all;
 }
 
-.upload-overlay.hidden {
+.upload-overlay.upload-hidden {
     display: none;
 }
 
