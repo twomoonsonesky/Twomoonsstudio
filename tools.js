@@ -32,35 +32,30 @@
   // Edit Menu
   // ------------------------------------------------------------
   function initEditMenu(ctx) {
-    const editBtn = document.getElementById('editModeBtn');
-    const menu = document.getElementById('editMenu');
-    const layoutOption = document.getElementById('editLayoutOption');
-    const codeOption = document.getElementById('editCodeOption');
-    const tailorOverlay = document.getElementById('tailorOverlay');
+  const editBtn = document.getElementById('editModeBtn');
+  const menu = document.getElementById('editMenu');
+  const layoutOption = document.getElementById('editLayoutOption');
+  const codeOption = document.getElementById('editCodeOption');
+  const uploadOption = document.getElementById('uploadAssetsOption');
+  const tailorOverlay = document.getElementById('tailorOverlay');
 
-    function closeMenu() {
-      menu?.classList.add('hidden');
-    }
+  layoutOption?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
+  });
 
-    editBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      menu?.classList.toggle('hidden');
-    });
+  codeOption?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (tailorOverlay) tailorOverlay.style.display = 'flex';
+  });
 
-    layoutOption?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeMenu();
-      window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
-    });
-
-    codeOption?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      closeMenu();
-      if (tailorOverlay) tailorOverlay.style.display = 'flex';
-    });
-
-    document.addEventListener('click', closeMenu);
-  }
+  uploadOption?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const uploadUI = document.getElementById('uploadUI');
+    uploadUI?.classList.remove('upload-hidden');
+    uploadUI?.classList.add('active');
+  });
+}
 
   // ------------------------------------------------------------
   // Layout Editor (FULL)
