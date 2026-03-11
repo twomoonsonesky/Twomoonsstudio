@@ -429,28 +429,25 @@ function initUploadSystem() {
   const uploadResults = document.getElementById('uploadResults');
 
   let selectedFiles = [];
-  let fileRenames = {}; // Store custom names
+  let fileRenames = {};
   let currentCategory = 'signposts';
   let isCreatingCategory = false;
 
-  // Sanitize filename
   function sanitizeFileName(name) {
     return name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
-      .replace(/\s+/g, '-')          // Spaces to dashes
-      .replace(/-+/g, '-')           // Multiple dashes to single
-      .replace(/^-|-$/g, '');        // Remove leading/trailing dashes
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
 
-  // Get file extension
   function getFileExtension(filename) {
     const parts = filename.split('.');
     return parts.length > 1 ? '.' + parts[parts.length - 1] : '';
   }
 
-  // Create category selector UI
   function createCategorySelector() {
     const existingSelector = document.getElementById('categorySelector');
     if (existingSelector) return;
@@ -501,7 +498,6 @@ function initUploadSystem() {
 
     container.appendChild(select);
 
-    // Custom category input
     const customContainer = document.createElement('div');
     customContainer.id = 'customCategoryContainer';
     customContainer.style.display = 'none';
@@ -530,7 +526,6 @@ function initUploadSystem() {
 
     customContainer.appendChild(customInput);
 
-    // Category preview
     const preview = document.createElement('div');
     preview.id = 'categoryPreview';
     preview.style.fontSize = '11px';
@@ -604,15 +599,12 @@ function initUploadSystem() {
     }
   }
 
-  // Open upload panel
   uploadAssetsBtn?.addEventListener('click', () => {
     uploadUI?.classList.remove('upload-hidden');
     uploadUI?.classList.add('active');
-    document.getElementById('editMenu')?.classList.add('hidden');
     createCategorySelector();
   });
 
-  // Close upload panel
   closeUploadBtn?.addEventListener('click', () => {
     uploadUI?.classList.remove('active');
     setTimeout(() => {
@@ -621,14 +613,12 @@ function initUploadSystem() {
     }, 300);
   });
 
-  // Click outside to close
   uploadUI?.addEventListener('click', (e) => {
     if (e.target === uploadUI) {
       closeUploadBtn?.click();
     }
   });
 
-  // Select files button
   selectFilesBtn?.addEventListener('click', () => {
     if (!currentCategory) {
       alert('Please select or create a category first!');
@@ -637,7 +627,6 @@ function initUploadSystem() {
     fileInput?.click();
   });
 
-  // File selection handler
   fileInput?.addEventListener('change', (e) => {
     const files = Array.from(e.target.files || []);
     selectedFiles = files;
@@ -652,7 +641,6 @@ function initUploadSystem() {
     }
   });
 
-  // Display selected files with rename inputs
   function displayFileList(files) {
     fileList.innerHTML = '';
     
@@ -668,7 +656,6 @@ function initUploadSystem() {
       container.className = 'file-item';
       container.style.marginBottom = '12px';
 
-      // Original filename
       const originalName = document.createElement('div');
       originalName.textContent = `Original: ${file.name}`;
       originalName.style.fontWeight = 'bold';
@@ -676,7 +663,6 @@ function initUploadSystem() {
       originalName.style.fontSize = '12px';
       container.appendChild(originalName);
 
-      // Rename label
       const renameLabel = document.createElement('div');
       renameLabel.textContent = 'Rename to:';
       renameLabel.style.fontSize = '11px';
@@ -684,7 +670,6 @@ function initUploadSystem() {
       renameLabel.style.color = '#666';
       container.appendChild(renameLabel);
 
-      // Rename input
       const renameInput = document.createElement('input');
       renameInput.type = 'text';
       renameInput.placeholder = 'e.g., left rustic';
@@ -702,7 +687,6 @@ function initUploadSystem() {
 
       container.appendChild(renameInput);
 
-      // Path preview
       const preview = document.createElement('div');
       preview.id = `preview-${index}`;
       preview.style.fontSize = '11px';
@@ -718,7 +702,6 @@ function initUploadSystem() {
     });
   }
 
-  // Upload to Firebase
   uploadBtn?.addEventListener('click', async () => {
     if (selectedFiles.length === 0) return;
     if (!currentCategory) {
@@ -726,7 +709,6 @@ function initUploadSystem() {
       return;
     }
 
-    // Check all files have names
     for (let i = 0; i < selectedFiles.length; i++) {
       const customName = fileRenames[i] || '';
       const sanitized = sanitizeFileName(customName);
@@ -789,7 +771,6 @@ function initUploadSystem() {
     uploadStatus.textContent = 'Upload complete!';
   });
 
-  // Display upload results
   function displayResults(results) {
     uploadResults.classList.remove('upload-hidden');
     uploadResults.innerHTML = '<div style="font-weight:bold; margin-bottom:12px; font-size:14px;">Upload Complete!</div>';
@@ -824,7 +805,6 @@ function initUploadSystem() {
     });
   }
 
-  // Reset UI
   function resetUploadUI() {
     selectedFiles = [];
     fileRenames = {};
