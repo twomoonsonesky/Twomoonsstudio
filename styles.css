@@ -500,9 +500,6 @@ body {
 /* CHAT_INTERFACE_END */
 
 /* UPLOAD_UI_START */
-.hidden {
-    display: none !important;
-}
 
 .upload-overlay {
     position: fixed;
