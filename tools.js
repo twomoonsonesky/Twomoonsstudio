@@ -1251,3 +1251,180 @@
     loadTokenFromLocal();
   }
 })();
+
+
+async function renderDebugContext(targetId) {
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
+
+  const title = document.createElement('div');
+  title.textContent = `🔍 Debug Context: ${targetId}`;
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
+
+  const loading = document.createElement('div');
+  loading.textContent = 'Searching all files...';
+  functionOutput.appendChild(loading);
+
+  try {
+    const token = requireToken();
+    
+    const files = ['index.html', 'styles.css', 'app.js', 'tools.js', 'firebase-config.js'];
+    const results = {
+      html: '',
+      css: [],
+      jsListeners: [],
+      jsReferences: [],
+      issues: []
+    };
+
+    for (const file of files) {
+      const { decoded } = await getFileContent(token, GH_DEFAULTS.owner, GH_DEFAULTS.repo, file, GH_DEFAULTS.branch);
+      
+      if (file === 'index.html') {
+        const idPattern = new RegExp(`id=["']${targetId}["']`, 'g');
+        if (idPattern.test(decoded)) {
+          const lines = decoded.split('\n');
+          for (let i = 0; i < lines.length; i++) {
+            if (lines[i].includes(`id="${targetId}"`)) {
+              results.html = lines.slice(i, i + 6).join('\n');
+              break;
+            }
+          }
+        }
+      }
+      
+      if (file === 'styles.css') {
+        const idSelector = new RegExp(`#${targetId}\\s*\\{[^}]+\\}`, 'g');
+        const classMatches = decoded.match(idSelector);
+        if (classMatches) {
+          results.css.push(...classMatches);
+        }
+      }
+      
+      if (file.endsWith('.js')) {
+        const getByIdPattern = new RegExp(`getElementById\\(['"]${targetId}['"]\\)`, 'g');
+        if (getByIdPattern.test(decoded)) {
+          results.jsReferences.push(`Found in ${file}`);
+          
+          const listenerPattern = new RegExp(`${targetId}[^;]+addEventListener\\(['"]([^'"]+)['"][^)]+\\)`, 'g');
+          const listeners = decoded.match(listenerPattern);
+          if (listeners) {
+            results.jsListeners.push(...listeners);
+          }
+        }
+      }
+    }
+
+    functionOutput.innerHTML = '';
+    functionOutput.appendChild(backBtn);
+    functionOutput.appendChild(title);
+
+    if (results.html) {
+      const htmlSection = document.createElement('div');
+      htmlSection.innerHTML = `<strong>📄 HTML Element:</strong>`;
+      htmlSection.style.marginTop = '12px';
+      htmlSection.style.marginBottom = '6px';
+      functionOutput.appendChild(htmlSection);
+
+      const htmlBox = document.createElement('pre');
+      htmlBox.textContent = results.html;
+      htmlBox.style.background = '#f5f5f5';
+      htmlBox.style.padding = '10px';
+      htmlBox.style.borderRadius = '6px';
+      htmlBox.style.fontSize = '11px';
+      htmlBox.style.overflow = 'auto';
+      htmlBox.style.fontFamily = 'monospace';
+      functionOutput.appendChild(htmlBox);
+    }
+
+    if (results.jsListeners.length > 0) {
+      const jsSection = document.createElement('div');
+      jsSection.innerHTML = `<strong>⚡ Event Listeners:</strong>`;
+      jsSection.style.marginTop = '12px';
+      jsSection.style.marginBottom = '6px';
+      functionOutput.appendChild(jsSection);
+
+      results.jsListeners.forEach(listener => {
+        const listenerBox = document.createElement('pre');
+        listenerBox.textContent = listener;
+        listenerBox.style.background = '#fff3cd';
+        listenerBox.style.padding = '8px';
+        listenerBox.style.borderRadius = '6px';
+        listenerBox.style.fontSize = '11px';
+        listenerBox.style.marginBottom = '6px';
+        listenerBox.style.fontFamily = 'monospace';
+        functionOutput.appendChild(listenerBox);
+      });
+    }
+
+    if (results.css.length > 0) {
+      const cssSection = document.createElement('div');
+      cssSection.innerHTML = `<strong>🎨 CSS Rules:</strong>`;
+      cssSection.style.marginTop = '12px';
+      cssSection.style.marginBottom = '6px';
+      functionOutput.appendChild(cssSection);
+
+      results.css.forEach(rule => {
+        const cssBox = document.createElement('pre');
+        cssBox.textContent = rule;
+        cssBox.style.background = '#e3f2fd';
+        cssBox.style.padding = '8px';
+        cssBox.style.borderRadius = '6px';
+        cssBox.style.fontSize = '11px';
+        cssBox.style.marginBottom = '6px';
+        cssBox.style.fontFamily = 'monospace';
+        functionOutput.appendChild(cssBox);
+      });
+    }
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = '📋 Copy Debug Bundle';
+    copyBtn.style.marginTop = '12px';
+    copyBtn.style.padding = '10px';
+    copyBtn.style.width = '100%';
+    copyBtn.style.borderRadius = '8px';
+    copyBtn.style.border = 'none';
+    copyBtn.style.background = '#4CAF50';
+    copyBtn.style.color = 'white';
+    copyBtn.style.fontWeight = 'bold';
+    copyBtn.style.cursor = 'pointer';
+    
+    copyBtn.onclick = async () => {
+      const bundle = `
+🔍 DEBUG CONTEXT: ${targetId}
+
+📄 HTML:
+${results.html || 'Not found'}
+
+⚡ EVENT LISTENERS:
+${results.jsListeners.join('\n\n') || 'None found'}
+
+🎨 CSS:
+${results.css.join('\n\n') || 'None found'}
+
+📁 REFERENCES:
+${results.jsReferences.join('\n') || 'None found'}
+      `;
+      
+      try {
+        await navigator.clipboard.writeText(bundle);
+        copyBtn.textContent = '✅ Copied!';
+        setTimeout(() => { copyBtn.textContent = '📋 Copy Debug Bundle'; }, 2000);
+      } catch {
+        alert('Copy the text above manually');
+      }
+    };
+    
+    functionOutput.appendChild(copyBtn);
+
+  } catch (error) {
+    functionOutput.innerHTML = `Error: ${error.message}`;
+  }
+}
