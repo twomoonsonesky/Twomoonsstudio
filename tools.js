@@ -32,29 +32,29 @@
   // Edit Menu
   // ------------------------------------------------------------
   function initEditMenu(ctx) {
-  const menu = document.getElementById('editMenu');
-  const layoutOption = document.getElementById('editLayoutOption');
-  const codeOption = document.getElementById('editCodeOption');
-  const uploadOption = document.getElementById('uploadAssetsOption');
-  const tailorOverlay = document.getElementById('tailorOverlay');
+    const menu = document.getElementById('editMenu');
+    const layoutOption = document.getElementById('editLayoutOption');
+    const codeOption = document.getElementById('editCodeOption');
+    const uploadOption = document.getElementById('uploadAssetsOption');
+    const tailorOverlay = document.getElementById('tailorOverlay');
 
-  layoutOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
-  });
+    layoutOption?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      window.__TWO_MOONS_LAYOUT_EDITOR__?.toggle?.();
+    });
 
-  codeOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    if (tailorOverlay) tailorOverlay.style.display = 'flex';
-  });
+    codeOption?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (tailorOverlay) tailorOverlay.style.display = 'flex';
+    });
 
-  uploadOption?.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const uploadUI = document.getElementById('uploadUI');
-    uploadUI?.classList.remove('upload-hidden');
-    uploadUI?.classList.add('active');
-  });
-}
+    uploadOption?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const uploadUI = document.getElementById('uploadUI');
+      uploadUI?.classList.remove('upload-hidden');
+      uploadUI?.classList.add('active');
+    });
+  }
 
   // ------------------------------------------------------------
   // Layout Editor (FULL)
@@ -89,10 +89,10 @@
     };
 
     const isZoomed = () => {
-  if (typeof ctx.isCottageZoomed === 'function') return !!ctx.isCottageZoomed();
-  if (typeof window.isCottageZoomed !== 'undefined') return !!window.isCottageZoomed;
-  return false;
-};;;
+      if (typeof ctx.isCottageZoomed === 'function') return !!ctx.isCottageZoomed();
+      if (typeof window.isCottageZoomed !== 'undefined') return !!window.isCottageZoomed;
+      return false;
+    };
 
     let isEditMode = false;
 
@@ -300,9 +300,9 @@
 
       const zoomedNow = isZoomed();
 
-      const orientationIcon = (window.innerWidth > window.innerHeight ? '(Landscape)' : '(Portrait)');
+      const orientationIcon = (window.innerWidth > window.innerHeight ? '[Landscape]' : '[Portrait]');
       const orientationName = (window.innerWidth > window.innerHeight ? 'Landscape' : 'Portrait');
-      const viewIcon = zoomedNow ? '(Zoomed)' : '(Normal)';
+      const viewIcon = zoomedNow ? '[Zoomed]' : '[Normal]';
       const viewName = zoomedNow ? 'Zoomed' : 'Normal';
 
       const currentViewElements = Array.from(document.querySelectorAll('.editable-element.edit-mode'));
@@ -470,16 +470,16 @@
     }
 
     async function getFileContent(token, owner, repo, path, refName) {
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
-  const data = await ghRequest(token, url);
-  if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
-  
-  const content = data.content.replace(/\n/g, '');
-  const bytes = Uint8Array.from(atob(content), c => c.charCodeAt(0));
-  const decoded = new TextDecoder().decode(bytes);
-  
-  return { decoded, sha: data.sha };
-}
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
+      const data = await ghRequest(token, url);
+      if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
+      
+      const content = data.content.replace(/\n/g, '');
+      const bytes = Uint8Array.from(atob(content), c => c.charCodeAt(0));
+      const decoded = new TextDecoder().decode(bytes);
+      
+      return { decoded, sha: data.sha };
+    }
 
     function normalizeNewlines(s) {
       return String(s).replace(/\r\n/g, '\n');
@@ -737,115 +737,291 @@
       return null;
     }
 
-    function renderModeSelector() {
-  functionOutput.innerHTML = '';
-  
-  const file = fileSelect?.value || 'app.js';
-  
-  const title = document.createElement('div');
-  title.textContent = 'Choose Edit Mode:';
-  title.style.fontWeight = 'bold';
-  title.style.marginBottom = '12px';
-  functionOutput.appendChild(title);
+    async function renderDebugContext(targetId) {
+      functionOutput.innerHTML = '';
+      
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '<- Back';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
 
-  const modes = [
-    { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-    { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-    { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
-    { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
-    { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
-    { id: 'debugContext', label: 'ð Debug Context', desc: 'Find all code related to an element', showFor: 'all' }
-  ];
+      const title = document.createElement('div');
+      title.textContent = `[DEBUG] ${targetId}`;
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '12px';
+      functionOutput.appendChild(title);
 
-  modes.forEach(mode => {
-    if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
-      return;
-    }
-    
-    const btn = document.createElement('button');
-    btn.textContent = mode.label;
-    btn.style.width = '100%';
-    btn.style.padding = '12px';
-    btn.style.marginBottom = '8px';
-    btn.style.textAlign = 'left';
-    btn.style.cursor = 'pointer';
-    btn.style.border = '2px solid #ccc';
-    btn.style.borderRadius = '6px';
-    btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
+      const loading = document.createElement('div');
+      loading.textContent = 'Searching all files...';
+      functionOutput.appendChild(loading);
 
-    const desc = document.createElement('div');
-    desc.textContent = mode.desc;
-    desc.style.fontSize = '0.85em';
-    desc.style.color = '#666';
-    desc.style.marginTop = '4px';
-    btn.appendChild(desc);
+      try {
+        const token = requireToken();
+        
+        const files = ['index.html', 'styles.css', 'app.js', 'tools.js', 'firebase-config.js'];
+        const results = {
+          html: '',
+          css: [],
+          jsListeners: [],
+          jsReferences: [],
+          issues: []
+        };
 
-    btn.onclick = () => {
-      currentMode = mode.id;
-      if (mode.id === 'debugContext') {
-        showDebugContextInput();
-      } else {
-        startEditMode();
+        for (const file of files) {
+          const { decoded } = await getFileContent(token, GH_DEFAULTS.owner, GH_DEFAULTS.repo, file, GH_DEFAULTS.branch);
+          
+          if (file === 'index.html') {
+            const idPattern = new RegExp(`id=["']${targetId}["']`, 'g');
+            if (idPattern.test(decoded)) {
+              const lines = decoded.split('\n');
+              for (let i = 0; i < lines.length; i++) {
+                if (lines[i].includes(`id="${targetId}"`)) {
+                  results.html = lines.slice(i, i + 6).join('\n');
+                  break;
+                }
+              }
+            }
+          }
+          
+          if (file === 'styles.css') {
+            const idSelector = new RegExp(`#${targetId}\\s*\\{[^}]+\\}`, 'g');
+            const classMatches = decoded.match(idSelector);
+            if (classMatches) {
+              results.css.push(...classMatches);
+            }
+          }
+          
+          if (file.endsWith('.js')) {
+            const getByIdPattern = new RegExp(`getElementById\\(['"]${targetId}['"]\\)`, 'g');
+            if (getByIdPattern.test(decoded)) {
+              results.jsReferences.push(`Found in ${file}`);
+              
+              const listenerPattern = new RegExp(`${targetId}[^;]+addEventListener\\(['"]([^'"]+)['"][^)]+\\)`, 'g');
+              const listeners = decoded.match(listenerPattern);
+              if (listeners) {
+                results.jsListeners.push(...listeners);
+              }
+            }
+          }
+        }
+
+        functionOutput.innerHTML = '';
+        functionOutput.appendChild(backBtn);
+        functionOutput.appendChild(title);
+
+        if (results.html) {
+          const htmlSection = document.createElement('div');
+          htmlSection.innerHTML = `<strong>[HTML]</strong>`;
+          htmlSection.style.marginTop = '12px';
+          htmlSection.style.marginBottom = '6px';
+          functionOutput.appendChild(htmlSection);
+
+          const htmlBox = document.createElement('pre');
+          htmlBox.textContent = results.html;
+          htmlBox.style.background = '#f5f5f5';
+          htmlBox.style.padding = '10px';
+          htmlBox.style.borderRadius = '6px';
+          htmlBox.style.fontSize = '11px';
+          htmlBox.style.overflow = 'auto';
+          htmlBox.style.fontFamily = 'monospace';
+          functionOutput.appendChild(htmlBox);
+        }
+
+        if (results.jsListeners.length > 0) {
+          const jsSection = document.createElement('div');
+          jsSection.innerHTML = `<strong>[EVENT LISTENERS]</strong>`;
+          jsSection.style.marginTop = '12px';
+          jsSection.style.marginBottom = '6px';
+          functionOutput.appendChild(jsSection);
+
+          results.jsListeners.forEach(listener => {
+            const listenerBox = document.createElement('pre');
+            listenerBox.textContent = listener;
+            listenerBox.style.background = '#fff3cd';
+            listenerBox.style.padding = '8px';
+            listenerBox.style.borderRadius = '6px';
+            listenerBox.style.fontSize = '11px';
+            listenerBox.style.marginBottom = '6px';
+            listenerBox.style.fontFamily = 'monospace';
+            functionOutput.appendChild(listenerBox);
+          });
+        }
+
+        if (results.css.length > 0) {
+          const cssSection = document.createElement('div');
+          cssSection.innerHTML = `<strong>[CSS]</strong>`;
+          cssSection.style.marginTop = '12px';
+          cssSection.style.marginBottom = '6px';
+          functionOutput.appendChild(cssSection);
+
+          results.css.forEach(rule => {
+            const cssBox = document.createElement('pre');
+            cssBox.textContent = rule;
+            cssBox.style.background = '#e3f2fd';
+            cssBox.style.padding = '8px';
+            cssBox.style.borderRadius = '6px';
+            cssBox.style.fontSize = '11px';
+            cssBox.style.marginBottom = '6px';
+            cssBox.style.fontFamily = 'monospace';
+            functionOutput.appendChild(cssBox);
+          });
+        }
+
+        const copyBtn = document.createElement('button');
+        copyBtn.textContent = '[COPY DEBUG BUNDLE]';
+        copyBtn.style.marginTop = '12px';
+        copyBtn.style.padding = '10px';
+        copyBtn.style.width = '100%';
+        copyBtn.style.borderRadius = '8px';
+        copyBtn.style.border = 'none';
+        copyBtn.style.background = '#4CAF50';
+        copyBtn.style.color = 'white';
+        copyBtn.style.fontWeight = 'bold';
+        copyBtn.style.cursor = 'pointer';
+        
+        copyBtn.onclick = async () => {
+          const bundle = `
+[DEBUG CONTEXT: ${targetId}]
+
+[HTML:]
+${results.html || 'Not found'}
+
+[EVENT LISTENERS:]
+${results.jsListeners.join('\n\n') || 'None found'}
+
+[CSS:]
+${results.css.join('\n\n') || 'None found'}
+
+[REFERENCES:]
+${results.jsReferences.join('\n') || 'None found'}
+          `;
+          
+          try {
+            await navigator.clipboard.writeText(bundle);
+            copyBtn.textContent = '[COPIED!]';
+            setTimeout(() => { copyBtn.textContent = '[COPY DEBUG BUNDLE]'; }, 2000);
+          } catch {
+            alert('Copy the text above manually');
+          }
+        };
+        
+        functionOutput.appendChild(copyBtn);
+
+      } catch (error) {
+        functionOutput.innerHTML = `Error: ${error.message}`;
       }
-    };
-
-    functionOutput.appendChild(btn);
-  });
-}
-
-function showDebugContextInput() {
-  functionOutput.innerHTML = '';
-  
-  const backBtn = document.createElement('button');
-  backBtn.textContent = 'â Back';
-  backBtn.style.marginBottom = '10px';
-  backBtn.onclick = renderModeSelector;
-  functionOutput.appendChild(backBtn);
-
-  const title = document.createElement('div');
-  title.textContent = 'ð Debug Context Explorer';
-  title.style.fontWeight = 'bold';
-  title.style.marginBottom = '12px';
-  functionOutput.appendChild(title);
-
-  const label = document.createElement('div');
-  label.textContent = 'Enter element ID to debug:';
-  label.style.fontSize = '13px';
-  label.style.marginBottom = '8px';
-  functionOutput.appendChild(label);
-
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.placeholder = 'e.g., uploadAssetsOption';
-  input.style.width = '100%';
-  input.style.padding = '10px';
-  input.style.borderRadius = '8px';
-  input.style.border = '2px solid rgba(180,140,255,0.4)';
-  input.style.marginBottom = '10px';
-  functionOutput.appendChild(input);
-
-  const searchBtn = document.createElement('button');
-  searchBtn.textContent = 'Search All Files';
-  searchBtn.style.width = '100%';
-  searchBtn.style.padding = '12px';
-  searchBtn.style.borderRadius = '8px';
-  searchBtn.style.border = 'none';
-  searchBtn.style.background = '#4CAF50';
-  searchBtn.style.color = 'white';
-  searchBtn.style.fontWeight = 'bold';
-  searchBtn.style.cursor = 'pointer';
-  
-  searchBtn.onclick = () => {
-    const targetId = input.value.trim();
-    if (!targetId) {
-      alert('Please enter an element ID');
-      return;
     }
-    renderDebugContext(targetId);
-  };
-  
-  functionOutput.appendChild(searchBtn);
-}
+
+    function renderModeSelector() {
+      functionOutput.innerHTML = '';
+      
+      const file = fileSelect?.value || 'app.js';
+      
+      const title = document.createElement('div');
+      title.textContent = 'Choose Edit Mode:';
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '12px';
+      functionOutput.appendChild(title);
+
+      const modes = [
+        { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+        { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
+        { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
+        { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
+        { id: 'debugContext', label: '[DEBUG] Code Explorer', desc: 'Find all code related to an element', showFor: 'all' }
+      ];
+
+      modes.forEach(mode => {
+        if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
+          return;
+        }
+        
+        const btn = document.createElement('button');
+        btn.textContent = mode.label;
+        btn.style.width = '100%';
+        btn.style.padding = '12px';
+        btn.style.marginBottom = '8px';
+        btn.style.textAlign = 'left';
+        btn.style.cursor = 'pointer';
+        btn.style.border = '2px solid #ccc';
+        btn.style.borderRadius = '6px';
+        btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
+
+        const desc = document.createElement('div');
+        desc.textContent = mode.desc;
+        desc.style.fontSize = '0.85em';
+        desc.style.color = '#666';
+        desc.style.marginTop = '4px';
+        btn.appendChild(desc);
+
+        btn.onclick = () => {
+          currentMode = mode.id;
+          if (mode.id === 'debugContext') {
+            showDebugContextInput();
+          } else {
+            startEditMode();
+          }
+        };
+
+        functionOutput.appendChild(btn);
+      });
+    }
+
+    function showDebugContextInput() {
+      functionOutput.innerHTML = '';
+      
+      const backBtn = document.createElement('button');
+      backBtn.textContent = '<- Back';
+      backBtn.style.marginBottom = '10px';
+      backBtn.onclick = renderModeSelector;
+      functionOutput.appendChild(backBtn);
+
+      const title = document.createElement('div');
+      title.textContent = '[DEBUG] Code Explorer';
+      title.style.fontWeight = 'bold';
+      title.style.marginBottom = '12px';
+      functionOutput.appendChild(title);
+
+      const label = document.createElement('div');
+      label.textContent = 'Enter element ID to debug:';
+      label.style.fontSize = '13px';
+      label.style.marginBottom = '8px';
+      functionOutput.appendChild(label);
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = 'e.g., uploadAssetsOption';
+      input.style.width = '100%';
+      input.style.padding = '10px';
+      input.style.borderRadius = '8px';
+      input.style.border = '2px solid rgba(180,140,255,0.4)';
+      input.style.marginBottom = '10px';
+      functionOutput.appendChild(input);
+
+      const searchBtn = document.createElement('button');
+      searchBtn.textContent = 'Search All Files';
+      searchBtn.style.width = '100%';
+      searchBtn.style.padding = '12px';
+      searchBtn.style.borderRadius = '8px';
+      searchBtn.style.border = 'none';
+      searchBtn.style.background = '#4CAF50';
+      searchBtn.style.color = 'white';
+      searchBtn.style.fontWeight = 'bold';
+      searchBtn.style.cursor = 'pointer';
+      
+      searchBtn.onclick = () => {
+        const targetId = input.value.trim();
+        if (!targetId) {
+          alert('Please enter an element ID');
+          return;
+        }
+        renderDebugContext(targetId);
+      };
+      
+      functionOutput.appendChild(searchBtn);
+    }
 
     async function startEditMode() {
       const file = fileSelect?.value || 'app.js';
@@ -1314,180 +1490,3 @@ function showDebugContextInput() {
     loadTokenFromLocal();
   }
 })();
-
-
-async function renderDebugContext(targetId) {
-  functionOutput.innerHTML = '';
-  
-  const backBtn = document.createElement('button');
-  backBtn.textContent = 'Ã¢ÂÂ Back';
-  backBtn.style.marginBottom = '10px';
-  backBtn.onclick = renderModeSelector;
-  functionOutput.appendChild(backBtn);
-
-  const title = document.createElement('div');
-  title.textContent = `Ã°ÂÂÂ Debug Context: ${targetId}`;
-  title.style.fontWeight = 'bold';
-  title.style.marginBottom = '12px';
-  functionOutput.appendChild(title);
-
-  const loading = document.createElement('div');
-  loading.textContent = 'Searching all files...';
-  functionOutput.appendChild(loading);
-
-  try {
-    const token = requireToken();
-    
-    const files = ['index.html', 'styles.css', 'app.js', 'tools.js', 'firebase-config.js'];
-    const results = {
-      html: '',
-      css: [],
-      jsListeners: [],
-      jsReferences: [],
-      issues: []
-    };
-
-    for (const file of files) {
-      const { decoded } = await getFileContent(token, GH_DEFAULTS.owner, GH_DEFAULTS.repo, file, GH_DEFAULTS.branch);
-      
-      if (file === 'index.html') {
-        const idPattern = new RegExp(`id=["']${targetId}["']`, 'g');
-        if (idPattern.test(decoded)) {
-          const lines = decoded.split('\n');
-          for (let i = 0; i < lines.length; i++) {
-            if (lines[i].includes(`id="${targetId}"`)) {
-              results.html = lines.slice(i, i + 6).join('\n');
-              break;
-            }
-          }
-        }
-      }
-      
-      if (file === 'styles.css') {
-        const idSelector = new RegExp(`#${targetId}\\s*\\{[^}]+\\}`, 'g');
-        const classMatches = decoded.match(idSelector);
-        if (classMatches) {
-          results.css.push(...classMatches);
-        }
-      }
-      
-      if (file.endsWith('.js')) {
-        const getByIdPattern = new RegExp(`getElementById\\(['"]${targetId}['"]\\)`, 'g');
-        if (getByIdPattern.test(decoded)) {
-          results.jsReferences.push(`Found in ${file}`);
-          
-          const listenerPattern = new RegExp(`${targetId}[^;]+addEventListener\\(['"]([^'"]+)['"][^)]+\\)`, 'g');
-          const listeners = decoded.match(listenerPattern);
-          if (listeners) {
-            results.jsListeners.push(...listeners);
-          }
-        }
-      }
-    }
-
-    functionOutput.innerHTML = '';
-    functionOutput.appendChild(backBtn);
-    functionOutput.appendChild(title);
-
-    if (results.html) {
-      const htmlSection = document.createElement('div');
-      htmlSection.innerHTML = `<strong>Ã°ÂÂÂ HTML Element:</strong>`;
-      htmlSection.style.marginTop = '12px';
-      htmlSection.style.marginBottom = '6px';
-      functionOutput.appendChild(htmlSection);
-
-      const htmlBox = document.createElement('pre');
-      htmlBox.textContent = results.html;
-      htmlBox.style.background = '#f5f5f5';
-      htmlBox.style.padding = '10px';
-      htmlBox.style.borderRadius = '6px';
-      htmlBox.style.fontSize = '11px';
-      htmlBox.style.overflow = 'auto';
-      htmlBox.style.fontFamily = 'monospace';
-      functionOutput.appendChild(htmlBox);
-    }
-
-    if (results.jsListeners.length > 0) {
-      const jsSection = document.createElement('div');
-      jsSection.innerHTML = `<strong>Ã¢ÂÂ¡ Event Listeners:</strong>`;
-      jsSection.style.marginTop = '12px';
-      jsSection.style.marginBottom = '6px';
-      functionOutput.appendChild(jsSection);
-
-      results.jsListeners.forEach(listener => {
-        const listenerBox = document.createElement('pre');
-        listenerBox.textContent = listener;
-        listenerBox.style.background = '#fff3cd';
-        listenerBox.style.padding = '8px';
-        listenerBox.style.borderRadius = '6px';
-        listenerBox.style.fontSize = '11px';
-        listenerBox.style.marginBottom = '6px';
-        listenerBox.style.fontFamily = 'monospace';
-        functionOutput.appendChild(listenerBox);
-      });
-    }
-
-    if (results.css.length > 0) {
-      const cssSection = document.createElement('div');
-      cssSection.innerHTML = `<strong>Ã°ÂÂÂ¨ CSS Rules:</strong>`;
-      cssSection.style.marginTop = '12px';
-      cssSection.style.marginBottom = '6px';
-      functionOutput.appendChild(cssSection);
-
-      results.css.forEach(rule => {
-        const cssBox = document.createElement('pre');
-        cssBox.textContent = rule;
-        cssBox.style.background = '#e3f2fd';
-        cssBox.style.padding = '8px';
-        cssBox.style.borderRadius = '6px';
-        cssBox.style.fontSize = '11px';
-        cssBox.style.marginBottom = '6px';
-        cssBox.style.fontFamily = 'monospace';
-        functionOutput.appendChild(cssBox);
-      });
-    }
-
-    const copyBtn = document.createElement('button');
-    copyBtn.textContent = 'Ã°ÂÂÂ Copy Debug Bundle';
-    copyBtn.style.marginTop = '12px';
-    copyBtn.style.padding = '10px';
-    copyBtn.style.width = '100%';
-    copyBtn.style.borderRadius = '8px';
-    copyBtn.style.border = 'none';
-    copyBtn.style.background = '#4CAF50';
-    copyBtn.style.color = 'white';
-    copyBtn.style.fontWeight = 'bold';
-    copyBtn.style.cursor = 'pointer';
-    
-    copyBtn.onclick = async () => {
-      const bundle = `
-Ã°ÂÂÂ DEBUG CONTEXT: ${targetId}
-
-Ã°ÂÂÂ HTML:
-${results.html || 'Not found'}
-
-Ã¢ÂÂ¡ EVENT LISTENERS:
-${results.jsListeners.join('\n\n') || 'None found'}
-
-Ã°ÂÂÂ¨ CSS:
-${results.css.join('\n\n') || 'None found'}
-
-Ã°ÂÂÂ REFERENCES:
-${results.jsReferences.join('\n') || 'None found'}
-      `;
-      
-      try {
-        await navigator.clipboard.writeText(bundle);
-        copyBtn.textContent = 'Ã¢ÂÂ Copied!';
-        setTimeout(() => { copyBtn.textContent = 'Ã°ÂÂÂ Copy Debug Bundle'; }, 2000);
-      } catch {
-        alert('Copy the text above manually');
-      }
-    };
-    
-    functionOutput.appendChild(copyBtn);
-
-  } catch (error) {
-    functionOutput.innerHTML = `Error: ${error.message}`;
-  }
-}
