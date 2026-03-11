@@ -470,12 +470,16 @@
     }
 
     async function getFileContent(token, owner, repo, path, refName) {
-      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
-      const data = await ghRequest(token, url);
-      if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
-      const decoded = atob(data.content.replace(/\n/g, ''));
-      return { decoded, sha: data.sha };
-    }
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
+  const data = await ghRequest(token, url);
+  if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
+  
+  const content = data.content.replace(/\n/g, '');
+  const bytes = Uint8Array.from(atob(content), c => c.charCodeAt(0));
+  const decoded = new TextDecoder().decode(bytes);
+  
+  return { decoded, sha: data.sha };
+}
 
     function normalizeNewlines(s) {
       return String(s).replace(/\r\n/g, '\n');
@@ -750,7 +754,7 @@
     { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
     { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
     { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
-    { id: 'debugContext', label: '🔍 Debug Context', desc: 'Find all code related to an element', showFor: 'all' }
+    { id: 'debugContext', label: 'ð Debug Context', desc: 'Find all code related to an element', showFor: 'all' }
   ];
 
   modes.forEach(mode => {
@@ -793,13 +797,13 @@ function showDebugContextInput() {
   functionOutput.innerHTML = '';
   
   const backBtn = document.createElement('button');
-  backBtn.textContent = '← Back';
+  backBtn.textContent = 'â Back';
   backBtn.style.marginBottom = '10px';
   backBtn.onclick = renderModeSelector;
   functionOutput.appendChild(backBtn);
 
   const title = document.createElement('div');
-  title.textContent = '🔍 Debug Context Explorer';
+  title.textContent = 'ð Debug Context Explorer';
   title.style.fontWeight = 'bold';
   title.style.marginBottom = '12px';
   functionOutput.appendChild(title);
@@ -1316,13 +1320,13 @@ async function renderDebugContext(targetId) {
   functionOutput.innerHTML = '';
   
   const backBtn = document.createElement('button');
-  backBtn.textContent = 'â Back';
+  backBtn.textContent = 'Ã¢ÂÂ Back';
   backBtn.style.marginBottom = '10px';
   backBtn.onclick = renderModeSelector;
   functionOutput.appendChild(backBtn);
 
   const title = document.createElement('div');
-  title.textContent = `ð Debug Context: ${targetId}`;
+  title.textContent = `Ã°ÂÂÂ Debug Context: ${targetId}`;
   title.style.fontWeight = 'bold';
   title.style.marginBottom = '12px';
   functionOutput.appendChild(title);
@@ -1387,7 +1391,7 @@ async function renderDebugContext(targetId) {
 
     if (results.html) {
       const htmlSection = document.createElement('div');
-      htmlSection.innerHTML = `<strong>ð HTML Element:</strong>`;
+      htmlSection.innerHTML = `<strong>Ã°ÂÂÂ HTML Element:</strong>`;
       htmlSection.style.marginTop = '12px';
       htmlSection.style.marginBottom = '6px';
       functionOutput.appendChild(htmlSection);
@@ -1405,7 +1409,7 @@ async function renderDebugContext(targetId) {
 
     if (results.jsListeners.length > 0) {
       const jsSection = document.createElement('div');
-      jsSection.innerHTML = `<strong>â¡ Event Listeners:</strong>`;
+      jsSection.innerHTML = `<strong>Ã¢ÂÂ¡ Event Listeners:</strong>`;
       jsSection.style.marginTop = '12px';
       jsSection.style.marginBottom = '6px';
       functionOutput.appendChild(jsSection);
@@ -1425,7 +1429,7 @@ async function renderDebugContext(targetId) {
 
     if (results.css.length > 0) {
       const cssSection = document.createElement('div');
-      cssSection.innerHTML = `<strong>ð¨ CSS Rules:</strong>`;
+      cssSection.innerHTML = `<strong>Ã°ÂÂÂ¨ CSS Rules:</strong>`;
       cssSection.style.marginTop = '12px';
       cssSection.style.marginBottom = '6px';
       functionOutput.appendChild(cssSection);
@@ -1444,7 +1448,7 @@ async function renderDebugContext(targetId) {
     }
 
     const copyBtn = document.createElement('button');
-    copyBtn.textContent = 'ð Copy Debug Bundle';
+    copyBtn.textContent = 'Ã°ÂÂÂ Copy Debug Bundle';
     copyBtn.style.marginTop = '12px';
     copyBtn.style.padding = '10px';
     copyBtn.style.width = '100%';
@@ -1457,25 +1461,25 @@ async function renderDebugContext(targetId) {
     
     copyBtn.onclick = async () => {
       const bundle = `
-ð DEBUG CONTEXT: ${targetId}
+Ã°ÂÂÂ DEBUG CONTEXT: ${targetId}
 
-ð HTML:
+Ã°ÂÂÂ HTML:
 ${results.html || 'Not found'}
 
-â¡ EVENT LISTENERS:
+Ã¢ÂÂ¡ EVENT LISTENERS:
 ${results.jsListeners.join('\n\n') || 'None found'}
 
-ð¨ CSS:
+Ã°ÂÂÂ¨ CSS:
 ${results.css.join('\n\n') || 'None found'}
 
-ð REFERENCES:
+Ã°ÂÂÂ REFERENCES:
 ${results.jsReferences.join('\n') || 'None found'}
       `;
       
       try {
         await navigator.clipboard.writeText(bundle);
-        copyBtn.textContent = 'â Copied!';
-        setTimeout(() => { copyBtn.textContent = 'ð Copy Debug Bundle'; }, 2000);
+        copyBtn.textContent = 'Ã¢ÂÂ Copied!';
+        setTimeout(() => { copyBtn.textContent = 'Ã°ÂÂÂ Copy Debug Bundle'; }, 2000);
       } catch {
         alert('Copy the text above manually');
       }
