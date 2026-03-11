@@ -95,10 +95,10 @@
     };
 
     const isZoomed = () => {
-      if (typeof ctx.isZoomed === 'function') return !!ctx.isZoomed();
-      if (typeof window.isCottageZoomed !== 'undefined') return !!window.isCottageZoomed;
-      return false;
-    };
+  if (typeof ctx.isCottageZoomed === 'function') return !!ctx.isCottageZoomed();
+  if (typeof window.isCottageZoomed !== 'undefined') return !!window.isCottageZoomed;
+  return false;
+};;
 
     let isEditMode = false;
 
