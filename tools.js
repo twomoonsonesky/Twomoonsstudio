@@ -971,80 +971,86 @@ ${results.jsReferences.join('\n') || 'None found'}
 // QUICK_PASTE_SYSTEM_START
   // QUICK_PASTE_SYSTEM:input_ui_START
   function showQuickPasteInput() {
-    functionOutput.innerHTML = '';
-    
-    const backBtn = document.createElement('button');
-    backBtn.textContent = '<- Back';
-    backBtn.style.marginBottom = '10px';
-    backBtn.onclick = renderModeSelector;
-    functionOutput.appendChild(backBtn);
+  // QUICK_PASTE_SYSTEM_START
+  // QUICK_PASTE_SYSTEM:input_ui_START
+  
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '<- Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
 
-    const title = document.createElement('div');
-    title.textContent = '[QUICK] Paste Command Block';
-    title.style.fontWeight = 'bold';
-    title.style.marginBottom = '12px';
-    functionOutput.appendChild(title);
+  const title = document.createElement('div');
+  title.textContent = '[QUICK] Paste Command Block';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
 
-    const instructions = document.createElement('div');
-    instructions.innerHTML = `
-      <div style="padding: 10px; background: #e3f2fd; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
-        <strong>Format:</strong><br>
-        <code style="display: block; margin-top: 6px; font-family: monospace;">
-  ---<br>
-  FILE: tools.js<br>
-  MODE: replace<br>
-  FUNCTION: initEditMenu()<br>
-  ---<br>
-  [your code here]
-        </code>
-        <div style="margin-top: 8px;">
-          <strong>Modes:</strong> replace, insertAfter, append, editSection<br>
-          <strong>For sections:</strong> Use SECTION: instead of FUNCTION:
-        </div>
+  const instructions = document.createElement('div');
+  instructions.innerHTML = `
+    <div style="padding: 10px; background: #e3f2fd; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+      <strong>Format:</strong><br>
+      <code style="display: block; margin-top: 6px; font-family: monospace;">
+---<br>
+FILE: tools.js<br>
+MODE: replace<br>
+FUNCTION: initEditMenu()<br>
+---<br>
+[your code here]
+      </code>
+      <div style="margin-top: 8px;">
+        <strong>Modes:</strong> replace, insertAfter, append, editSection<br>
+        <strong>For sections:</strong> Use SECTION: instead of FUNCTION:
       </div>
-    `;
-    functionOutput.appendChild(instructions);
+    </div>
+  `;
+  functionOutput.appendChild(instructions);
 
-    const pasteBox = document.createElement('textarea');
-    pasteBox.placeholder = 'Paste your command block here...';
-    pasteBox.style.width = '100%';
-    pasteBox.style.minHeight = '300px';
-    pasteBox.style.fontFamily = 'monospace';
-    pasteBox.style.fontSize = '12px';
-    pasteBox.style.padding = '10px';
-    pasteBox.style.borderRadius = '8px';
-    pasteBox.style.border = '2px solid rgba(180,140,255,0.4)';
-    pasteBox.style.marginBottom = '10px';
-    functionOutput.appendChild(pasteBox);
+  const pasteBox = document.createElement('textarea');
+  pasteBox.placeholder = 'Paste your command block here...';
+  pasteBox.style.width = '100%';
+  pasteBox.style.minHeight = '300px';
+  pasteBox.style.fontFamily = 'monospace';
+  pasteBox.style.fontSize = '12px';
+  pasteBox.style.padding = '10px';
+  pasteBox.style.borderRadius = '8px';
+  pasteBox.style.border = '2px solid rgba(180,140,255,0.4)';
+  pasteBox.style.marginBottom = '10px';
+  functionOutput.appendChild(pasteBox);
 
-    const processBtn = document.createElement('button');
-    processBtn.textContent = 'Generate Patch';
-    processBtn.style.width = '100%';
-    processBtn.style.padding = '12px';
-    processBtn.style.borderRadius = '8px';
-    processBtn.style.border = 'none';
-    processBtn.style.background = '#4CAF50';
-    processBtn.style.color = 'white';
-    processBtn.style.fontWeight = 'bold';
-    processBtn.style.cursor = 'pointer';
-    
-    processBtn.onclick = async () => {
-      const content = pasteBox.value.trim();
-      if (!content) {
-        alert('Please paste a command block first!');
-        return;
-      }
+  const processBtn = document.createElement('button');
+  processBtn.textContent = 'Generate Patch';
+  processBtn.style.width = '100%';
+  processBtn.style.padding = '12px';
+  processBtn.style.borderRadius = '8px';
+  processBtn.style.border = 'none';
+  processBtn.style.background = '#4CAF50';
+  processBtn.style.color = 'white';
+  processBtn.style.fontWeight = 'bold';
+  processBtn.style.cursor = 'pointer';
+  
+  processBtn.onclick = async () => {
+    const content = pasteBox.value.trim();
+    if (!content) {
+      alert('Please paste a command block first!');
+      return;
+    }
 
-      try {
-        const parsed = parseQuickPasteBlock(content);
-        await executeQuickPaste(parsed);
-      } catch (error) {
-        alert('Error: ' + error.message);
-      }
-    };
-    
-    functionOutput.appendChild(processBtn);
-  }
+    try {
+      const parsed = parseQuickPasteBlock(content);
+      await executeQuickPaste(parsed);
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  functionOutput.appendChild(processBtn);
+  
+  // QUICK_PASTE_SYSTEM:input_ui_END
+  // QUICK_PASTE_SYSTEM_END
+}
   // QUICK_PASTE_SYSTEM:input_ui_END
 // QUICK_PASTE_SYSTEM_END
 
