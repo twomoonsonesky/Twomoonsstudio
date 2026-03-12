@@ -907,60 +907,257 @@ ${results.jsReferences.join('\n') || 'None found'}
     }
 
     function renderModeSelector() {
-      functionOutput.innerHTML = '';
-      
-      const file = fileSelect?.value || 'app.js';
-      
-      const title = document.createElement('div');
-      title.textContent = 'Choose Edit Mode:';
-      title.style.fontWeight = 'bold';
-      title.style.marginBottom = '12px';
-      functionOutput.appendChild(title);
+  functionOutput.innerHTML = '';
+  
+  const file = fileSelect?.value || 'app.js';
+  
+  const title = document.createElement('div');
+  title.textContent = 'Choose Edit Mode:';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
 
-      const modes = [
-        { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-        { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
-        { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
-        { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
-        { id: 'debugContext', label: '[DEBUG] Code Explorer', desc: 'Find all code related to an element', showFor: 'all' }
-      ];
+  const modes = [
+    { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+    { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
+    { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
+    { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
+    { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
+    { id: 'debugContext', label: '[DEBUG] Code Explorer', desc: 'Find all code related to an element', showFor: 'all' },
+    { id: 'quickPaste', label: '[QUICK] Paste Command', desc: 'Paste pre-formatted code block with headers', showFor: 'all' }
+  ];
 
-      modes.forEach(mode => {
-        if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
-          return;
-        }
-        
-        const btn = document.createElement('button');
-        btn.textContent = mode.label;
-        btn.style.width = '100%';
-        btn.style.padding = '12px';
-        btn.style.marginBottom = '8px';
-        btn.style.textAlign = 'left';
-        btn.style.cursor = 'pointer';
-        btn.style.border = '2px solid #ccc';
-        btn.style.borderRadius = '6px';
-        btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
-
-        const desc = document.createElement('div');
-        desc.textContent = mode.desc;
-        desc.style.fontSize = '0.85em';
-        desc.style.color = '#666';
-        desc.style.marginTop = '4px';
-        btn.appendChild(desc);
-
-        btn.onclick = () => {
-          currentMode = mode.id;
-          if (mode.id === 'debugContext') {
-            showDebugContextInput();
-          } else {
-            startEditMode();
-          }
-        };
-
-        functionOutput.appendChild(btn);
-      });
+  modes.forEach(mode => {
+    if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
+      return;
     }
+    
+    const btn = document.createElement('button');
+    btn.textContent = mode.label;
+    btn.style.width = '100%';
+    btn.style.padding = '12px';
+    btn.style.marginBottom = '8px';
+    btn.style.textAlign = 'left';
+    btn.style.cursor = 'pointer';
+    btn.style.border = '2px solid #ccc';
+    btn.style.borderRadius = '6px';
+    btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
+
+    const desc = document.createElement('div');
+    desc.textContent = mode.desc;
+    desc.style.fontSize = '0.85em';
+    desc.style.color = '#666';
+    desc.style.marginTop = '4px';
+    btn.appendChild(desc);
+
+    btn.onclick = () => {
+      currentMode = mode.id;
+      if (mode.id === 'debugContext') {
+        showDebugContextInput();
+      } else if (mode.id === 'quickPaste') {
+        showQuickPasteInput();
+      } else {
+        startEditMode();
+      }
+    };
+
+    functionOutput.appendChild(btn);
+  });
+}
+
+function showQuickPasteInput() {
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '<- Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
+
+  const title = document.createElement('div');
+  title.textContent = '[QUICK] Paste Command Block';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
+
+  const instructions = document.createElement('div');
+  instructions.innerHTML = `
+    <div style="padding: 10px; background: #e3f2fd; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+      <strong>Format:</strong><br>
+      <code style="display: block; margin-top: 6px; font-family: monospace;">
+---<br>
+FILE: tools.js<br>
+MODE: replace<br>
+FUNCTION: initEditMenu()<br>
+---<br>
+[your code here]
+      </code>
+      <div style="margin-top: 8px;">
+        <strong>Modes:</strong> replace, insertAfter, append, editSection<br>
+        <strong>For sections:</strong> Use SECTION: instead of FUNCTION:
+      </div>
+    </div>
+  `;
+  functionOutput.appendChild(instructions);
+
+  const pasteBox = document.createElement('textarea');
+  pasteBox.placeholder = 'Paste your command block here...';
+  pasteBox.style.width = '100%';
+  pasteBox.style.minHeight = '300px';
+  pasteBox.style.fontFamily = 'monospace';
+  pasteBox.style.fontSize = '12px';
+  pasteBox.style.padding = '10px';
+  pasteBox.style.borderRadius = '8px';
+  pasteBox.style.border = '2px solid rgba(180,140,255,0.4)';
+  pasteBox.style.marginBottom = '10px';
+  functionOutput.appendChild(pasteBox);
+
+  const processBtn = document.createElement('button');
+  processBtn.textContent = 'Generate Patch';
+  processBtn.style.width = '100%';
+  processBtn.style.padding = '12px';
+  processBtn.style.borderRadius = '8px';
+  processBtn.style.border = 'none';
+  processBtn.style.background = '#4CAF50';
+  processBtn.style.color = 'white';
+  processBtn.style.fontWeight = 'bold';
+  processBtn.style.cursor = 'pointer';
+  
+  processBtn.onclick = async () => {
+    const content = pasteBox.value.trim();
+    if (!content) {
+      alert('Please paste a command block first!');
+      return;
+    }
+
+    try {
+      const parsed = parseQuickPasteBlock(content);
+      await executeQuickPaste(parsed);
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  };
+  
+  functionOutput.appendChild(processBtn);
+}
+
+function parseQuickPasteBlock(content) {
+  const lines = content.split('\n');
+  
+  let headerEnd = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === '---' && i > 0) {
+      headerEnd = i;
+      break;
+    }
+  }
+  
+  if (headerEnd === -1) {
+    throw new Error('Invalid format: Missing closing --- for header');
+  }
+  
+  const headerLines = lines.slice(0, headerEnd);
+  const codeLines = lines.slice(headerEnd + 1);
+  
+  const parsed = {
+    file: '',
+    mode: '',
+    target: '',
+    code: codeLines.join('\n').trim()
+  };
+  
+  for (const line of headerLines) {
+    const trimmed = line.trim();
+    if (trimmed === '---') continue;
+    
+    const fileMat = trimmed.match(/^FILE:\s*(.+)$/i);
+    if (fileMat) {
+      parsed.file = fileMat[1].trim();
+      continue;
+    }
+    
+    const modeMat = trimmed.match(/^MODE:\s*(.+)$/i);
+    if (modeMat) {
+      parsed.mode = modeMat[1].trim().toLowerCase();
+      continue;
+    }
+    
+    const funcMat = trimmed.match(/^FUNCTION:\s*(.+)$/i);
+    if (funcMat) {
+      parsed.target = funcMat[1].trim();
+      continue;
+    }
+    
+    const sectMat = trimmed.match(/^SECTION:\s*(.+)$/i);
+    if (sectMat) {
+      parsed.target = sectMat[1].trim();
+      parsed.mode = 'editSection';
+      continue;
+    }
+  }
+  
+  if (!parsed.file) throw new Error('Missing FILE: in header');
+  if (!parsed.mode) throw new Error('Missing MODE: in header');
+  if (!parsed.code) throw new Error('No code provided after header');
+  
+  if ((parsed.mode === 'replace' || parsed.mode === 'insertafter') && !parsed.target) {
+    throw new Error(`MODE ${parsed.mode} requires FUNCTION: or SECTION:`);
+  }
+  
+  return parsed;
+}
+
+async function executeQuickPaste(parsed) {
+  const token = requireToken();
+  const text = await getFileText(parsed.file);
+  
+  let find, replace, commitMsg;
+  
+  if (parsed.mode === 'replace') {
+    if (parsed.file.endsWith('.js')) {
+      const funcName = parsed.target.replace(/\(\)$/, '');
+      find = extractFunctionSource(text, funcName);
+      if (!find) throw new Error(`Function ${parsed.target} not found in ${parsed.file}`);
+      replace = parsed.code;
+      commitMsg = `Quick Paste: replace ${funcName} in ${parsed.file}`;
+    } else {
+      find = extractSectionContent(text, parsed.target);
+      if (!find) throw new Error(`Section ${parsed.target} not found in ${parsed.file}`);
+      replace = parsed.code;
+      commitMsg = `Quick Paste: replace section ${parsed.target} in ${parsed.file}`;
+    }
+  } else if (parsed.mode === 'insertafter') {
+    const funcName = parsed.target.replace(/\(\)$/, '');
+    find = extractFunctionSource(text, funcName);
+    if (!find) throw new Error(`Function ${parsed.target} not found in ${parsed.file}`);
+    replace = find + '\n\n' + parsed.code;
+    commitMsg = `Quick Paste: insert after ${funcName} in ${parsed.file}`;
+  } else if (parsed.mode === 'append') {
+    find = text;
+    replace = text + '\n\n' + parsed.code;
+    commitMsg = `Quick Paste: append to ${parsed.file}`;
+  } else if (parsed.mode === 'editsection') {
+    find = extractSectionContent(text, parsed.target);
+    if (!find) throw new Error(`Section ${parsed.target} not found in ${parsed.file}`);
+    replace = parsed.code;
+    commitMsg = `Quick Paste: replace section ${parsed.target} in ${parsed.file}`;
+  } else {
+    throw new Error(`Unknown mode: ${parsed.mode}`);
+  }
+  
+  const patch = {
+    owner: GH_DEFAULTS.owner,
+    repo: GH_DEFAULTS.repo,
+    branch: GH_DEFAULTS.branch,
+    filePath: parsed.file,
+    find: find,
+    replace: replace,
+    commitMessage: commitMsg
+  };
+  
+  if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
+  setResult('Quick Paste: Patch JSON generated! Press Dry Run to verify, then Commit.');
+}
 
     function showDebugContextInput() {
       functionOutput.innerHTML = '';
