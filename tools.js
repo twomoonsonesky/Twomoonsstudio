@@ -1192,16 +1192,16 @@ async function auditFile(fileName, token) {
   return results;
 }
 
-function checkForFeatureMarkers(fileText, snippetName) {
-  // Look for feature markers around this snippet
+function checkForFeatureMarkers(codeBlock) {
+  // Check if THIS CODE BLOCK has feature markers around it
   const patterns = [
-    new RegExp(`//\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm'),
-    new RegExp(`<!--\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm'),
-    new RegExp(`/\\*\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm')
+    /\/\/\s*[A-Z_]+_START/,           // JS: // FEATURE_START
+    /<!--\s*[A-Z_]+_START/,            // HTML: <!-- FEATURE_START -->
+    /\/\*\s*[A-Z_]+_START/             // CSS: /* FEATURE_START */
   ];
   
   for (const pattern of patterns) {
-    if (pattern.test(fileText)) {
+    if (pattern.test(codeBlock)) {
       return true;
     }
   }
