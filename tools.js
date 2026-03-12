@@ -1217,7 +1217,10 @@ function checkForFeatureMarkers(codeBlock) {
 }
 
 function extractFeatureName(codeBlock) {
-  // Extract feature name from THIS CODE BLOCK
+  // Extract feature name from lines 2-5 only
+  const lines = codeBlock.split('\n');
+  const markerLines = lines.slice(1, 5).join('\n');
+  
   const patterns = [
     /\/\/\s*([A-Z_]+)_START/,         // JS
     /<!--\s*([A-Z_]+)_START/,          // HTML
@@ -1225,7 +1228,7 @@ function extractFeatureName(codeBlock) {
   ];
   
   for (const pattern of patterns) {
-    const match = codeBlock.match(pattern);
+    const match = markerLines.match(pattern);
     if (match && match[1]) {
       return match[1];
     }
