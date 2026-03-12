@@ -1044,6 +1044,167 @@ FUNCTION: initEditMenu()<br>
   functionOutput.appendChild(processBtn);
 }
 
+async function showAuditMode() {
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '<- Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
+
+  const title = document.createElement('div');
+  title.textContent = '[AUDIT] Code Quality Scanner';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
+
+  const file = fileSelect?.value || 'app.js';
+  
+  const fileLabel = document.createElement('div');
+  fileLabel.textContent = `Scanning: ${file}`;
+  fileLabel.style.padding = '8px';
+  fileLabel.style.background = '#e3f2fd';
+  fileLabel.style.borderRadius = '6px';
+  fileLabel.style.marginBottom = '12px';
+  fileLabel.style.fontSize = '14px';
+  functionOutput.appendChild(fileLabel);
+
+  const loading = document.createElement('div');
+  loading.textContent = 'Analyzing code...';
+  loading.style.padding = '20px';
+  loading.style.textAlign = 'center';
+  loading.style.color = '#666';
+  functionOutput.appendChild(loading);
+
+  try {
+    const token = requireToken();
+    const results = await auditFile(file, token);
+    
+    functionOutput.removeChild(loading);
+    
+    // Display unmarked snippets
+    if (results.unmarked.length > 0) {
+      const unmarkedHeader = document.createElement('div');
+      unmarkedHeader.textContent = 'UNMARKED (need labels):';
+      unmarkedHeader.style.fontWeight = 'bold';
+      unmarkedHeader.style.marginTop = '12px';
+      unmarkedHeader.style.marginBottom = '8px';
+      unmarkedHeader.style.color = '#d32f2f';
+      functionOutput.appendChild(unmarkedHeader);
+
+      results.unmarked.forEach(name => {
+        const item = document.createElement('div');
+        item.textContent = `• ${name}`;
+        item.style.padding = '4px 0';
+        item.style.paddingLeft = '12px';
+        functionOutput.appendChild(item);
+      });
+    }
+    
+    // Display marked snippets
+    if (results.marked.length > 0) {
+      const markedHeader = document.createElement('div');
+      markedHeader.textContent = 'MARKED (already labeled):';
+      markedHeader.style.fontWeight = 'bold';
+      markedHeader.style.marginTop = '16px';
+      markedHeader.style.marginBottom = '8px';
+      markedHeader.style.color = '#388e3c';
+      functionOutput.appendChild(markedHeader);
+
+      results.marked.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = `✓ ${item.name} [${item.feature}]`;
+        div.style.padding = '4px 0';
+        div.style.paddingLeft = '12px';
+        functionOutput.appendChild(div);
+      });
+    }
+    
+    // Progress summary
+    const total = results.marked.length + results.unmarked.length;
+    const progress = document.createElement('div');
+    progress.textContent = `Progress: ${results.marked.length} of ${total} labeled`;
+    progress.style.marginTop = '16px';
+    progress.style.padding = '10px';
+    progress.style.background = '#f5f5f5';
+    progress.style.borderRadius = '6px';
+    progress.style.textAlign = 'center';
+    progress.style.fontWeight = 'bold';
+    functionOutput.appendChild(progress);
+    
+  } catch (error) {
+    loading.textContent = 'Error: ' + error.message;
+    loading.style.color = '#d32f2f';
+  }
+}
+
+async function auditFile(fileName, token) {
+  const fileText = await getFileText(fileName);
+  
+  let snippets = [];
+  
+  if (fileName.endsWith('.js')) {
+    snippets = await getFunctionNames(fileName);
+  } else {
+    snippets = getSectionNames(fileText);
+  }
+  
+  const results = {
+    marked: [],
+    unmarked: []
+  };
+  
+  for (const snippet of snippets) {
+    const snippetName = snippet.replace(/\(\)$/, '');
+    const hasMarkers = checkForFeatureMarkers(fileText, snippetName);
+    
+    if (hasMarkers) {
+      const featureName = extractFeatureName(fileText, snippetName);
+      results.marked.push({
+        name: snippet,
+        feature: featureName || 'UNKNOWN'
+      });
+    } else {
+      results.unmarked.push(snippet);
+    }
+  }
+  
+  return results;
+}
+
+function checkForFeatureMarkers(fileText, snippetName) {
+  // Look for feature markers around this snippet
+  const patterns = [
+    new RegExp(`//\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm'),
+    new RegExp(`<!--\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm'),
+    new RegExp(`/\\*\\s*[A-Z_]+_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm')
+  ];
+  
+  for (const pattern of patterns) {
+    if (pattern.test(fileText)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function extractFeatureName(fileText, snippetName) {
+  // Find the feature marker before this snippet
+  const jsPattern = new RegExp(`//\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
+  const htmlPattern = new RegExp(`<!--\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
+  const cssPattern = new RegExp(`/\\*\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
+  
+  let match = fileText.match(jsPattern) || fileText.match(htmlPattern) || fileText.match(cssPattern);
+  
+  if (match && match[1]) {
+    return match[1];
+  }
+  
+  return null;
+}
+
 function parseQuickPasteBlock(content) {
   const lines = content.split('\n');
   
