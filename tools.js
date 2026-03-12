@@ -1161,10 +1161,25 @@ async function auditFile(fileName, token) {
   
   for (const snippet of snippets) {
     const snippetName = snippet.replace(/\(\)$/, '');
-    const hasMarkers = checkForFeatureMarkers(fileText, snippetName);
+    
+    // Get the actual code for this specific snippet
+    let snippetCode = null;
+    if (fileName.endsWith('.js')) {
+      snippetCode = extractFunctionSource(fileText, snippetName);
+    } else {
+      snippetCode = extractSectionContent(fileText, snippetName);
+    }
+    
+    if (!snippetCode) {
+      results.unmarked.push(snippet);
+      continue;
+    }
+    
+    // Check if THIS CODE BLOCK has feature markers
+    const hasMarkers = checkForFeatureMarkers(snippetCode);
     
     if (hasMarkers) {
-      const featureName = extractFeatureName(fileText, snippetName);
+      const featureName = extractFeatureName(snippetCode);
       results.marked.push({
         name: snippet,
         feature: featureName || 'UNKNOWN'
