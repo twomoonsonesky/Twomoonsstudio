@@ -1209,16 +1209,19 @@ function checkForFeatureMarkers(codeBlock) {
   return false;
 }
 
-function extractFeatureName(fileText, snippetName) {
-  // Find the feature marker before this snippet
-  const jsPattern = new RegExp(`//\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
-  const htmlPattern = new RegExp(`<!--\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
-  const cssPattern = new RegExp(`/\\*\\s*([A-Z_]+)_START[\\s\\S]*?${snippetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'm');
+function extractFeatureName(codeBlock) {
+  // Extract feature name from THIS CODE BLOCK
+  const patterns = [
+    /\/\/\s*([A-Z_]+)_START/,         // JS
+    /<!--\s*([A-Z_]+)_START/,          // HTML
+    /\/\*\s*([A-Z_]+)_START/           // CSS
+  ];
   
-  let match = fileText.match(jsPattern) || fileText.match(htmlPattern) || fileText.match(cssPattern);
-  
-  if (match && match[1]) {
-    return match[1];
+  for (const pattern of patterns) {
+    const match = codeBlock.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
   }
   
   return null;
