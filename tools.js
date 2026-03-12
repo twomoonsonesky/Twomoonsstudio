@@ -1570,6 +1570,74 @@ function validateFeatureMarkers(code) {
   // AUDIT_SYSTEM_END
 }
 
+async function applyAllMarkers(fileName, fileText, selections, token) {
+  // AUDIT_SYSTEM_START
+  // AUDIT_SYSTEM:batch_applicator_START
+  
+  let updatedText = fileText;
+  let count = 0;
+  
+  // Apply markers to each selected function
+  for (const [funcName, { feature, sub }] of Object.entries(selections)) {
+    const cleanName = funcName.replace(/\(\)$/, '');
+    
+    // Get the original function code
+    let originalCode;
+    if (fileName.endsWith('.js')) {
+      originalCode = extractFunctionSource(updatedText, cleanName);
+    } else {
+      originalCode = extractSectionContent(updatedText, cleanName);
+    }
+    
+    if (!originalCode) {
+      console.warn(`Could not find ${funcName} - skipping`);
+      continue;
+    }
+    
+    // Build the marked version
+    const lines = originalCode.split('\n');
+    const firstLine = lines[0]; // function declaration
+    const restLines = lines.slice(1); // everything else
+    
+    const markedCode = [
+      firstLine,
+      `  // ${feature}_START`,
+      `  // ${feature}:${sub}_START`,
+      '',
+      ...restLines.slice(0, -1), // body without closing brace
+      '',
+      `  // ${feature}:${sub}_END`,
+      `  // ${feature}_END`,
+      lines[lines.length - 1] // closing brace
+    ].join('\n');
+    
+    // Replace in the full text
+    updatedText = updatedText.replace(originalCode, markedCode);
+    count++;
+  }
+  
+  if (count === 0) {
+    throw new Error('No functions were marked!');
+  }
+  
+  // Create patch to replace entire file
+  const patch = {
+    owner: GH_DEFAULTS.owner,
+    repo: GH_DEFAULTS.repo,
+    branch: GH_DEFAULTS.branch,
+    filePath: fileName,
+    find: fileText,
+    replace: updatedText,
+    commitMessage: `Audit: Add feature markers to ${count} functions in ${fileName}`
+  };
+  
+  // Commit the patch
+  await commitPatch(patch, token);
+  
+  // AUDIT_SYSTEM:batch_applicator_END
+  // AUDIT_SYSTEM_END
+}
+
 function parseQuickPasteBlock(content) {
   const lines = content.split('\n');
   
