@@ -924,7 +924,8 @@ ${results.jsReferences.join('\n') || 'None found'}
     { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
     { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
     { id: 'debugContext', label: '[DEBUG] Code Explorer', desc: 'Find all code related to an element', showFor: 'all' },
-    { id: 'quickPaste', label: '[QUICK] Paste Command', desc: 'Paste pre-formatted code block with headers', showFor: 'all' }
+    { id: 'quickPaste', label: '[QUICK] Paste Command', desc: 'Paste pre-formatted code block with headers', showFor: 'all' },
+    { id: 'auditCode', label: '[AUDIT] Code Quality', desc: 'Find unmarked functions and sections', showFor: 'all' }
   ];
 
   modes.forEach(mode => {
@@ -956,6 +957,8 @@ ${results.jsReferences.join('\n') || 'None found'}
         showDebugContextInput();
       } else if (mode.id === 'quickPaste') {
         showQuickPasteInput();
+      } else if (mode.id === 'auditCode') {
+        showAuditMode();
       } else {
         startEditMode();
       }
