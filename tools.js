@@ -1193,7 +1193,14 @@ async function auditFile(fileName, token) {
 }
 
 function checkForFeatureMarkers(codeBlock) {
-  // Check if THIS CODE BLOCK has feature markers around it
+  // Check ONLY lines 2-5 for feature markers
+  // This is where they should ALWAYS be
+  
+  const lines = codeBlock.split('\n');
+  
+  // Lines 2-5 (array indices 1-4)
+  const markerLines = lines.slice(1, 5).join('\n');
+  
   const patterns = [
     /\/\/\s*[A-Z_]+_START/,           // JS: // FEATURE_START
     /<!--\s*[A-Z_]+_START/,            // HTML: <!-- FEATURE_START -->
@@ -1201,7 +1208,7 @@ function checkForFeatureMarkers(codeBlock) {
   ];
   
   for (const pattern of patterns) {
-    if (pattern.test(codeBlock)) {
+    if (pattern.test(markerLines)) {
       return true;
     }
   }
