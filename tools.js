@@ -1055,6 +1055,9 @@ FUNCTION: initEditMenu()<br>
 // QUICK_PASTE_SYSTEM_END
 
 async function showAuditMode() {
+  // AUDIT_SYSTEM_START
+  // AUDIT_SYSTEM:ui_renderer_START
+  
   functionOutput.innerHTML = '';
   
   const backBtn = document.createElement('button');
@@ -1090,34 +1093,315 @@ async function showAuditMode() {
   try {
     const token = requireToken();
     const results = await auditFile(file, token);
+    const fileText = await getFileText(file);
     
     functionOutput.removeChild(loading);
     
-    // Display unmarked snippets
+    // Store selections for each function
+    const selections = {};
+    
+    // Display unmarked snippets with accordion
     if (results.unmarked.length > 0) {
       const unmarkedHeader = document.createElement('div');
-      unmarkedHeader.textContent = 'UNMARKED (need labels):';
+      unmarkedHeader.textContent = `UNMARKED (${results.unmarked.length} functions):`;
       unmarkedHeader.style.fontWeight = 'bold';
       unmarkedHeader.style.marginTop = '12px';
-      unmarkedHeader.style.marginBottom = '8px';
+      unmarkedHeader.style.marginBottom = '12px';
       unmarkedHeader.style.color = '#d32f2f';
       functionOutput.appendChild(unmarkedHeader);
 
-      results.unmarked.forEach(name => {
-        const item = document.createElement('div');
-        item.textContent = `• ${name}`;
-        item.style.padding = '4px 0';
-        item.style.paddingLeft = '12px';
-        functionOutput.appendChild(item);
+      results.unmarked.forEach((name, index) => {
+        const container = document.createElement('div');
+        container.style.marginBottom = '8px';
+        container.style.border = '2px solid #ddd';
+        container.style.borderRadius = '8px';
+        container.style.overflow = 'hidden';
+        
+        // Header (always visible)
+        const header = document.createElement('div');
+        header.style.padding = '10px';
+        header.style.background = '#f5f5f5';
+        header.style.cursor = 'pointer';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        
+        const headerText = document.createElement('span');
+        headerText.textContent = `▶ ${name}`;
+        headerText.style.fontWeight = 'bold';
+        headerText.style.fontSize = '13px';
+        header.appendChild(headerText);
+        
+        const statusBadge = document.createElement('span');
+        statusBadge.style.fontSize = '11px';
+        statusBadge.style.padding = '2px 8px';
+        statusBadge.style.borderRadius = '4px';
+        statusBadge.style.background = '#ccc';
+        statusBadge.style.color = 'white';
+        statusBadge.textContent = 'Not labeled';
+        header.appendChild(statusBadge);
+        
+        container.appendChild(header);
+        
+        // Expandable content (hidden initially)
+        const content = document.createElement('div');
+        content.style.display = 'none';
+        content.style.padding = '12px';
+        content.style.background = '#fff3cd';
+        
+        // Feature dropdown
+        const featureRow = document.createElement('div');
+        featureRow.style.marginBottom = '10px';
+        
+        const featureLabel = document.createElement('div');
+        featureLabel.textContent = 'Feature:';
+        featureLabel.style.fontSize = '12px';
+        featureLabel.style.marginBottom = '4px';
+        featureLabel.style.fontWeight = 'bold';
+        featureRow.appendChild(featureLabel);
+        
+        const featureSelect = document.createElement('select');
+        featureSelect.style.width = '100%';
+        featureSelect.style.padding = '8px';
+        featureSelect.style.borderRadius = '4px';
+        featureSelect.style.border = '1px solid #ccc';
+        
+        const featureOptions = [
+          'Select...',
+          'TAILOR_ENGINE',
+          'QUICK_PASTE_SYSTEM',
+          'AUDIT_SYSTEM',
+          'DEBUG_CONTEXT',
+          'EDIT_MENU',
+          'LAYOUT_EDITOR',
+          'ORB_INTERACTION',
+          'UPLOAD_SYSTEM',
+          'COTTAGE_ZOOM',
+          '+ Create New...'
+        ];
+        
+        featureOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          featureSelect.appendChild(option);
+        });
+        
+        featureRow.appendChild(featureSelect);
+        content.appendChild(featureRow);
+        
+        // Custom feature input
+        const customFeatureRow = document.createElement('div');
+        customFeatureRow.style.display = 'none';
+        customFeatureRow.style.marginBottom = '10px';
+        
+        const customFeatureInput = document.createElement('input');
+        customFeatureInput.type = 'text';
+        customFeatureInput.placeholder = 'MY_FEATURE';
+        customFeatureInput.style.width = '100%';
+        customFeatureInput.style.padding = '8px';
+        customFeatureInput.style.borderRadius = '4px';
+        customFeatureInput.style.border = '1px solid #ccc';
+        customFeatureInput.style.textTransform = 'uppercase';
+        customFeatureRow.appendChild(customFeatureInput);
+        content.appendChild(customFeatureRow);
+        
+        featureSelect.addEventListener('change', () => {
+          if (featureSelect.value === '+ Create New...') {
+            customFeatureRow.style.display = 'block';
+            customFeatureInput.focus();
+          } else {
+            customFeatureRow.style.display = 'none';
+          }
+        });
+        
+        // Subcomponent dropdown
+        const subRow = document.createElement('div');
+        subRow.style.marginBottom = '10px';
+        
+        const subLabel = document.createElement('div');
+        subLabel.textContent = 'Subcomponent:';
+        subLabel.style.fontSize = '12px';
+        subLabel.style.marginBottom = '4px';
+        subLabel.style.fontWeight = 'bold';
+        subRow.appendChild(subLabel);
+        
+        const subSelect = document.createElement('select');
+        subSelect.style.width = '100%';
+        subSelect.style.padding = '8px';
+        subSelect.style.borderRadius = '4px';
+        subSelect.style.border = '1px solid #ccc';
+        
+        const subOptions = [
+          'Select...',
+          'initializer',
+          'handler',
+          'renderer',
+          'validator',
+          'scanner',
+          'builder',
+          'parser',
+          'formatter',
+          '+ Custom...'
+        ];
+        
+        subOptions.forEach(opt => {
+          const option = document.createElement('option');
+          option.value = opt;
+          option.textContent = opt;
+          subSelect.appendChild(option);
+        });
+        
+        subRow.appendChild(subSelect);
+        content.appendChild(subRow);
+        
+        // Custom subcomponent input
+        const customSubRow = document.createElement('div');
+        customSubRow.style.display = 'none';
+        customSubRow.style.marginBottom = '10px';
+        
+        const customSubInput = document.createElement('input');
+        customSubInput.type = 'text';
+        customSubInput.placeholder = 'my_handler';
+        customSubInput.style.width = '100%';
+        customSubInput.style.padding = '8px';
+        customSubInput.style.borderRadius = '4px';
+        customSubInput.style.border = '1px solid #ccc';
+        customSubInput.style.textTransform = 'lowercase';
+        customSubRow.appendChild(customSubInput);
+        content.appendChild(customSubRow);
+        
+        subSelect.addEventListener('change', () => {
+          if (subSelect.value === '+ Custom...') {
+            customSubRow.style.display = 'block';
+            customSubInput.focus();
+          } else {
+            customSubRow.style.display = 'none';
+          }
+        });
+        
+        // Done button
+        const doneBtn = document.createElement('button');
+        doneBtn.textContent = '✓ Done';
+        doneBtn.style.width = '100%';
+        doneBtn.style.padding = '10px';
+        doneBtn.style.borderRadius = '6px';
+        doneBtn.style.border = 'none';
+        doneBtn.style.background = '#4CAF50';
+        doneBtn.style.color = 'white';
+        doneBtn.style.fontWeight = 'bold';
+        doneBtn.style.cursor = 'pointer';
+        
+        doneBtn.onclick = () => {
+          let feature = featureSelect.value;
+          let sub = subSelect.value;
+          
+          if (feature === '+ Create New...') {
+            feature = customFeatureInput.value.trim().toUpperCase().replace(/\s+/g, '_');
+          }
+          
+          if (sub === '+ Custom...') {
+            sub = customSubInput.value.trim().toLowerCase().replace(/\s+/g, '_');
+          }
+          
+          if (!feature || feature === 'Select...') {
+            alert('Please select a feature!');
+            return;
+          }
+          
+          if (!sub || sub === 'Select...') {
+            alert('Please select a subcomponent!');
+            return;
+          }
+          
+          // Save selection
+          selections[name] = { feature, sub };
+          
+          // Update UI
+          headerText.textContent = `✓ ${name}`;
+          statusBadge.textContent = `${feature}:${sub}`;
+          statusBadge.style.background = '#4CAF50';
+          content.style.display = 'none';
+          
+          // Update apply button count
+          updateApplyButton();
+        };
+        
+        content.appendChild(doneBtn);
+        container.appendChild(content);
+        
+        // Toggle accordion
+        header.onclick = () => {
+          const isOpen = content.style.display === 'block';
+          document.querySelectorAll('.audit-content').forEach(c => c.style.display = 'none');
+          content.style.display = isOpen ? 'none' : 'block';
+          const arrow = isOpen ? '▶' : '▼';
+          headerText.textContent = headerText.textContent.replace(/^[▶▼✓]\s/, arrow + ' ');
+        };
+        
+        content.classList.add('audit-content');
+        functionOutput.appendChild(container);
       });
+      
+      // Apply All button
+      const applyBtn = document.createElement('button');
+      applyBtn.id = 'applyAllMarkersBtn';
+      applyBtn.textContent = 'Apply All Markers (0 ready)';
+      applyBtn.style.width = '100%';
+      applyBtn.style.padding = '14px';
+      applyBtn.style.marginTop = '16px';
+      applyBtn.style.borderRadius = '8px';
+      applyBtn.style.border = 'none';
+      applyBtn.style.background = '#ccc';
+      applyBtn.style.color = 'white';
+      applyBtn.style.fontWeight = 'bold';
+      applyBtn.style.fontSize = '15px';
+      applyBtn.style.cursor = 'not-allowed';
+      applyBtn.disabled = true;
+      
+      function updateApplyButton() {
+        const count = Object.keys(selections).length;
+        applyBtn.textContent = `Apply All Markers (${count} ready)`;
+        if (count > 0) {
+          applyBtn.style.background = '#2196F3';
+          applyBtn.style.cursor = 'pointer';
+          applyBtn.disabled = false;
+        } else {
+          applyBtn.style.background = '#ccc';
+          applyBtn.style.cursor = 'not-allowed';
+          applyBtn.disabled = true;
+        }
+      }
+      
+      applyBtn.onclick = async () => {
+        const count = Object.keys(selections).length;
+        if (count === 0) return;
+        
+        if (!confirm(`Apply feature markers to ${count} functions?`)) return;
+        
+        applyBtn.textContent = 'Applying...';
+        applyBtn.disabled = true;
+        
+        try {
+          await applyAllMarkers(file, fileText, selections, token);
+          alert(`Success! Applied markers to ${count} functions!`);
+          showAuditMode();
+        } catch (error) {
+          alert('Error: ' + error.message);
+          applyBtn.textContent = `Apply All Markers (${count} ready)`;
+          applyBtn.disabled = false;
+        }
+      };
+      
+      functionOutput.appendChild(applyBtn);
     }
     
     // Display marked snippets
     if (results.marked.length > 0) {
       const markedHeader = document.createElement('div');
-      markedHeader.textContent = 'MARKED (already labeled):';
+      markedHeader.textContent = `MARKED (${results.marked.length} labeled):`;
       markedHeader.style.fontWeight = 'bold';
-      markedHeader.style.marginTop = '16px';
+      markedHeader.style.marginTop = '20px';
       markedHeader.style.marginBottom = '8px';
       markedHeader.style.color = '#388e3c';
       functionOutput.appendChild(markedHeader);
@@ -1125,13 +1409,16 @@ async function showAuditMode() {
       results.marked.forEach(item => {
         const div = document.createElement('div');
         div.textContent = `✓ ${item.name} [${item.feature}]`;
-        div.style.padding = '4px 0';
-        div.style.paddingLeft = '12px';
+        div.style.padding = '8px';
+        div.style.fontSize = '13px';
+        div.style.background = '#e8f5e9';
+        div.style.borderRadius = '6px';
+        div.style.marginBottom = '4px';
         functionOutput.appendChild(div);
       });
     }
     
-    // Progress summary
+    // Progress
     const total = results.marked.length + results.unmarked.length;
     const progress = document.createElement('div');
     progress.textContent = `Progress: ${results.marked.length} of ${total} labeled`;
@@ -1147,6 +1434,9 @@ async function showAuditMode() {
     loading.textContent = 'Error: ' + error.message;
     loading.style.color = '#d32f2f';
   }
+  
+  // AUDIT_SYSTEM:ui_renderer_END
+  // AUDIT_SYSTEM_END
 }
 
 async function auditFile(fileName, token) {
