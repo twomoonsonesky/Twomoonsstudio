@@ -1347,10 +1347,18 @@ function parseQuickPasteBlock(content) {
 }
 
 async function executeQuickPaste(parsed) {
+  // QUICK_PASTE_SYSTEM_START
+  // QUICK_PASTE_SYSTEM:executor_START
+  
   const token = requireToken();
   const text = await getFileText(parsed.file);
   
   let find, replace, commitMsg;
+  
+  // Validate markers BEFORE processing
+  if (!validateFeatureMarkers(parsed.code)) {
+    throw new Error(`Missing feature markers!\n\nYour code must have markers on lines 2-5:\n\n// FEATURE_NAME_START\n// FEATURE_NAME:subcomponent_START\n\nAdd markers and try again.`);
+  }
   
   if (parsed.mode === 'replace') {
     if (parsed.file.endsWith('.js')) {
@@ -1396,6 +1404,9 @@ async function executeQuickPaste(parsed) {
   
   if (patchArea) patchArea.value = JSON.stringify(patch, null, 2);
   setResult('Quick Paste: Patch JSON generated! Press Dry Run to verify, then Commit.');
+  
+  // QUICK_PASTE_SYSTEM:executor_END
+  // QUICK_PASTE_SYSTEM_END
 }
 
     function showDebugContextInput() {
