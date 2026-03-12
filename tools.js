@@ -62,10 +62,9 @@
   function initLayoutEditor(ctx) {
     const grid = document.getElementById('grid-overlay');
     const layoutInfo = document.getElementById('layoutInfo');
-    const editBtn = document.getElementById('editModeBtn');
     const container = document.getElementById('landing-container');
 
-    if (!editBtn || !container) return;
+    if (!container) return;
 
     const getCurrentLayout = () =>
       (typeof ctx.getCurrentLayout === 'function')
@@ -108,9 +107,6 @@
     function enterEditMode() {
       isEditMode = true;
 
-      editBtn.classList.add('active');
-      editBtn.textContent = 'Editing...';
-
       grid?.classList.remove('hidden');
       layoutInfo?.classList.remove('hidden');
 
@@ -120,9 +116,6 @@
 
     function exitEditMode() {
       isEditMode = false;
-
-      editBtn.classList.remove('active');
-      editBtn.textContent = 'Edit';
 
       grid?.classList.add('hidden');
       layoutInfo?.classList.add('hidden');
