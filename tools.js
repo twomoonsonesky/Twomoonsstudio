@@ -490,6 +490,13 @@
 
   // TAILOR_ENGINE:handler_END
   // TAILOR_ENGINE_END
+async function ghRequest(token, url, options = {}
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:handler_START
+
+
+  // TAILOR_ENGINE:handler_END
+  // TAILOR_ENGINE_END
 async function ghRequest(token, url, options = {}) {
       const res = await fetch(url, {
         ...options,
