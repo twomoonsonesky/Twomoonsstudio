@@ -402,7 +402,7 @@
     const GH_DEFAULTS = {
       owner: "twomoonsonesky",
       repo: "Twomoonsstudio",
-      branch: "main",
+      branch: "rescuemission",
     };
 
     const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
