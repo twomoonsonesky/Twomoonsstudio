@@ -1683,6 +1683,59 @@ async function applyAllMarkers(fileName, fileText, selections, token) {
   // AUDIT_SYSTEM_END
 }
 
+async function quickCommit(patch, token) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:quick_committer_START
+  
+  // Commit directly without dry run
+  const url = `https://api.github.com/repos/${patch.owner}/${patch.repo}/contents/${patch.filePath}`;
+  
+  // Get current file SHA
+  const getResp = await fetch(`${url}?ref=${patch.branch}`, {
+    headers: { 'Authorization': `token ${token}` }
+  });
+  
+  if (!getResp.ok) {
+    throw new Error(`Failed to get file: ${getResp.statusText}`);
+  }
+  
+  const fileData = await getResp.json();
+  const currentContent = atob(fileData.sha ? fileData.content : '');
+  const sha = fileData.sha;
+  
+  // Apply the patch
+  const newContent = currentContent.replace(patch.find, patch.replace);
+  
+  if (newContent === currentContent) {
+    throw new Error('Patch did not match - no changes made!');
+  }
+  
+  // Commit
+  const commitResp = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: patch.commitMessage,
+      content: btoa(unescape(encodeURIComponent(newContent))),
+      sha: sha,
+      branch: patch.branch
+    })
+  });
+  
+  if (!commitResp.ok) {
+    const err = await commitResp.json();
+    throw new Error(`Commit failed: ${err.message || commitResp.statusText}`);
+  }
+  
+  return true;
+  
+  // TAILOR_ENGINE:quick_committer_END
+  // TAILOR_ENGINE_END
+}
+
 function parseQuickPasteBlock(content) {
   const lines = content.split('\n');
   
