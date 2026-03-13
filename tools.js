@@ -1507,6 +1507,9 @@ async function auditFile(fileName, token) {
 }
 
 function checkForFeatureMarkers(codeBlock) {
+  // AUDIT_SYSTEM_START
+  // AUDIT_SYSTEM:checker_START
+
   // Check ONLY lines 2-5 for feature markers
   // This is where they should ALWAYS be
   
@@ -1528,6 +1531,9 @@ function checkForFeatureMarkers(codeBlock) {
   }
   
   return false;
+
+  // AUDIT_SYSTEM:checker_END
+  // AUDIT_SYSTEM_END
 }
 
 function extractFeatureName(codeBlock) {
