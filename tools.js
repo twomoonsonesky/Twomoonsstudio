@@ -1649,8 +1649,40 @@ async function applyAllMarkers(fileName, fileText, selections, token) {
     commitMessage: `Audit: Add feature markers to ${count} functions in ${fileName}`
   };
   
-  // Commit the patch
-  await commitPatch(patch, token);
+  // Get current file SHA
+const getUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}?ref=${GH_DEFAULTS.branch}`;
+const getResp = await fetch(getUrl, {
+  headers: { 'Authorization': `token ${token}` }
+});
+
+if (!getResp.ok) {
+  throw new Error(`Failed to get file: ${getResp.statusText}`);
+}
+
+const fileData = await getResp.json();
+const sha = fileData.sha;
+
+// Commit the updated file
+const commitUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}`;
+const commitResp = await fetch(commitUrl, {
+  method: 'PUT',
+  headers: {
+    'Authorization': `token ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    message: `Audit: Add feature markers to ${count} functions in ${fileName}`,
+    content: btoa(unescape(encodeURIComponent(updatedText))),
+    sha: sha,
+    branch: GH_DEFAULTS.branch
+  })
+});
+
+if (!commitResp.ok) {
+  const err = await commitResp.json();
+  throw new Error(`Commit failed: ${err.message || commitResp.statusText}`);
+}
+
   
   // AUDIT_SYSTEM:batch_applicator_END
   // AUDIT_SYSTEM_END
