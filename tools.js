@@ -72,8 +72,14 @@
         : (window.getCurrentLayout ? window.getCurrentLayout() : null);
 
     const applyLayout = () => {
+  // LAYOUT_EDITOR_START
+  // LAYOUT_EDITOR:applicator_START
+
       if (typeof ctx.applyLayout === 'function') return ctx.applyLayout();
       if (typeof window.applyLayout === 'function') return window.applyLayout();
+
+  // LAYOUT_EDITOR:applicator_END
+  // LAYOUT_EDITOR_END
     };
 
     const syncLights = (cottageId) => {
@@ -479,6 +485,9 @@
     }
 
     function applyReplace(sourceText, find, replace) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:patch_applicator_START
+
       const S = normalizeNewlines(sourceText);
       const F = normalizeNewlines(find);
       const R = normalizeNewlines(replace);
@@ -487,6 +496,9 @@
       if (count <= 0) return { updated: sourceText, count: 0 };
 
       return { updated: S.split(F).join(R), count };
+
+  // TAILOR_ENGINE:patch_applicator_END
+  // TAILOR_ENGINE_END
     }
 
     async function putFileContent(token, owner, repo, path, branch, message, newText, sha) {
@@ -1440,6 +1452,9 @@ async function showAuditMode() {
 }
 
 async function auditFile(fileName, token) {
+  // AUDIT_SYSTEM_START
+  // AUDIT_SYSTEM:scanner_START
+
   const fileText = await getFileText(fileName);
   
   let snippets = [];
@@ -1486,6 +1501,9 @@ async function auditFile(fileName, token) {
   }
   
   return results;
+
+  // AUDIT_SYSTEM:scanner_END
+  // AUDIT_SYSTEM_END
 }
 
 function checkForFeatureMarkers(codeBlock) {
@@ -1620,39 +1638,19 @@ async function applyAllMarkers(fileName, fileText, selections, token) {
     throw new Error('No functions were marked!');
   }
   
-  // Get current file SHA
-  const getUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}?ref=${GH_DEFAULTS.branch}`;
-  const getResp = await fetch(getUrl, {
-    headers: { 'Authorization': `token ${token}` }
-  });
+  // Create patch to replace entire file
+  const patch = {
+    owner: GH_DEFAULTS.owner,
+    repo: GH_DEFAULTS.repo,
+    branch: GH_DEFAULTS.branch,
+    filePath: fileName,
+    find: fileText,
+    replace: updatedText,
+    commitMessage: `Audit: Add feature markers to ${count} functions in ${fileName}`
+  };
   
-  if (!getResp.ok) {
-    throw new Error(`Failed to get file: ${getResp.statusText}`);
-  }
-  
-  const fileData = await getResp.json();
-  const sha = fileData.sha;
-  
-  // Commit the updated file
-  const commitUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}`;
-  const commitResp = await fetch(commitUrl, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      message: `Audit: Add feature markers to ${count} functions in ${fileName}`,
-      content: btoa(unescape(encodeURIComponent(updatedText))),
-      sha: sha,
-      branch: GH_DEFAULTS.branch
-    })
-  });
-  
-  if (!commitResp.ok) {
-    const err = await commitResp.json();
-    throw new Error(`Commit failed: ${err.message || commitResp.statusText}`);
-  }
+  // Commit the patch
+  await commitPatch(patch, token);
   
   // AUDIT_SYSTEM:batch_applicator_END
   // AUDIT_SYSTEM_END
