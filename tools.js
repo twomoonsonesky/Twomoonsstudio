@@ -1615,6 +1615,11 @@ function validateFeatureMarkers(code) {
   // AUDIT_SYSTEM_END
 }
 
+---
+FILE: tools.js
+MODE: replace
+FUNCTION: applyAllMarkers()
+---
 async function applyAllMarkers(fileName, fileText, selections, token) {
   // AUDIT_SYSTEM_START
   // AUDIT_SYSTEM:batch_applicator_START
@@ -1665,19 +1670,39 @@ async function applyAllMarkers(fileName, fileText, selections, token) {
     throw new Error('No functions were marked!');
   }
   
-  // Create patch to replace entire file
-  const patch = {
-    owner: GH_DEFAULTS.owner,
-    repo: GH_DEFAULTS.repo,
-    branch: GH_DEFAULTS.branch,
-    filePath: fileName,
-    find: fileText,
-    replace: updatedText,
-    commitMessage: `Audit: Add feature markers to ${count} functions in ${fileName}`
-  };
+  // Get current file SHA
+  const getUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}?ref=${GH_DEFAULTS.branch}`;
+  const getResp = await fetch(getUrl, {
+    headers: { 'Authorization': `token ${token}` }
+  });
   
-  // Commit the patch
-  await commitPatch(patch, token);
+  if (!getResp.ok) {
+    throw new Error(`Failed to get file: ${getResp.statusText}`);
+  }
+  
+  const fileData = await getResp.json();
+  const sha = fileData.sha;
+  
+  // Commit the updated file
+  const commitUrl = `https://api.github.com/repos/${GH_DEFAULTS.owner}/${GH_DEFAULTS.repo}/contents/${fileName}`;
+  const commitResp = await fetch(commitUrl, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message: `Audit: Add feature markers to ${count} functions in ${fileName}`,
+      content: btoa(unescape(encodeURIComponent(updatedText))),
+      sha: sha,
+      branch: GH_DEFAULTS.branch
+    })
+  });
+  
+  if (!commitResp.ok) {
+    const err = await commitResp.json();
+    throw new Error(`Commit failed: ${err.message || commitResp.statusText}`);
+  }
   
   // AUDIT_SYSTEM:batch_applicator_END
   // AUDIT_SYSTEM_END
