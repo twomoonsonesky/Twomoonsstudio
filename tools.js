@@ -2428,3 +2428,20 @@ async function executeQuickPaste(parsed) {
 
 // Quick Paste Mode test - successfully added!
 // This proves the Quick Paste system works!
+
+(function initQuickCommitOnLoad() {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:initialization_wrapper_START
+  
+  // Initialize Quick Commit button when Tailor loads
+  if (typeof initTailor !== 'undefined') {
+    const originalInit = initTailor;
+    initTailor = function(ctx) {
+      originalInit(ctx);
+      setTimeout(createQuickCommitButton, 100);
+    };
+  }
+  
+  // TAILOR_ENGINE:initialization_wrapper_END
+  // TAILOR_ENGINE_END
+})();
