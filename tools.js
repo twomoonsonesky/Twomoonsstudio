@@ -1736,6 +1736,44 @@ async function quickCommit(patch, token) {
   // TAILOR_ENGINE_END
 }
 
+function createQuickCommitButton() {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:quick_commit_ui_START
+  
+  // Create Quick Commit button
+  const quickCommitBtn = document.createElement('button');
+  quickCommitBtn.id = 'quickCommitBtn';
+  quickCommitBtn.textContent = '⚡ Quick Commit';
+  quickCommitBtn.style.padding = '10px 20px';
+  quickCommitBtn.style.marginLeft = '10px';
+  quickCommitBtn.style.background = '#FF9800';
+  quickCommitBtn.style.color = 'white';
+  quickCommitBtn.style.border = 'none';
+  quickCommitBtn.style.borderRadius = '6px';
+  quickCommitBtn.style.cursor = 'pointer';
+  quickCommitBtn.style.fontWeight = 'bold';
+
+  quickCommitBtn.addEventListener('click', async () => {
+    try {
+      setResult('Quick committing...');
+      const token = requireToken();
+      const patch = parsePatch();
+      await quickCommit(patch, token);
+      setResult('✓ Quick commit successful!');
+    } catch (e) {
+      setResult('Error: ' + (e?.message || e));
+    }
+  });
+
+  // Insert quick commit button next to commit button
+  if (commitBtn?.parentNode) {
+    commitBtn.parentNode.insertBefore(quickCommitBtn, commitBtn.nextSibling);
+  }
+  
+  // TAILOR_ENGINE:quick_commit_ui_END
+  // TAILOR_ENGINE_END
+}
+
 function parseQuickPasteBlock(content) {
   const lines = content.split('\n');
   
