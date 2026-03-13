@@ -1109,10 +1109,8 @@ async function showAuditMode() {
     
     functionOutput.removeChild(loading);
     
-    // Store selections for each function
     const selections = {};
     
-    // Display unmarked snippets with accordion
     if (results.unmarked.length > 0) {
       const unmarkedHeader = document.createElement('div');
       unmarkedHeader.textContent = `UNMARKED (${results.unmarked.length} functions):`;
@@ -1129,7 +1127,6 @@ async function showAuditMode() {
         container.style.borderRadius = '8px';
         container.style.overflow = 'hidden';
         
-        // Header (always visible)
         const header = document.createElement('div');
         header.style.padding = '10px';
         header.style.background = '#f5f5f5';
@@ -1155,7 +1152,6 @@ async function showAuditMode() {
         
         container.appendChild(header);
         
-        // Expandable content (hidden initially)
         const content = document.createElement('div');
         content.style.display = 'none';
         content.style.padding = '12px';
@@ -1189,6 +1185,7 @@ async function showAuditMode() {
           'ORB_INTERACTION',
           'UPLOAD_SYSTEM',
           'COTTAGE_ZOOM',
+          'FIREBASE_SYSTEM',
           '+ Create New...'
         ];
         
@@ -1202,7 +1199,6 @@ async function showAuditMode() {
         featureRow.appendChild(featureSelect);
         content.appendChild(featureRow);
         
-        // Custom feature input
         const customFeatureRow = document.createElement('div');
         customFeatureRow.style.display = 'none';
         customFeatureRow.style.marginBottom = '10px';
@@ -1227,7 +1223,7 @@ async function showAuditMode() {
           }
         });
         
-        // Subcomponent dropdown
+        // COMPREHENSIVE Subcomponent dropdown
         const subRow = document.createElement('div');
         subRow.style.marginBottom = '10px';
         
@@ -1246,14 +1242,54 @@ async function showAuditMode() {
         
         const subOptions = [
           'Select...',
+          // Setup & Creation
           'initializer',
+          'builder',
+          'creator',
+          'generator',
+          'configurator',
+          // Processing & Execution
           'handler',
+          'processor',
+          'executor',
+          'applicator',
+          'transformer',
+          'converter',
+          // Display & Output
           'renderer',
+          'formatter',
+          'displayer',
+          'presenter',
+          // Validation & Analysis
           'validator',
           'scanner',
-          'builder',
+          'detector',
+          'checker',
+          'analyzer',
+          'verifier',
+          // Data Operations
           'parser',
-          'formatter',
+          'loader',
+          'saver',
+          'updater',
+          'deleter',
+          'fetcher',
+          // Event & State
+          'listener',
+          'watcher',
+          'subscriber',
+          'notifier',
+          // Control & Management
+          'manager',
+          'controller',
+          'coordinator',
+          'orchestrator',
+          // Compound/Specific
+          'patch_applicator',
+          'batch_applicator',
+          'ui_renderer',
+          'mode_selector',
+          'input_ui',
           '+ Custom...'
         ];
         
@@ -1267,7 +1303,6 @@ async function showAuditMode() {
         subRow.appendChild(subSelect);
         content.appendChild(subRow);
         
-        // Custom subcomponent input
         const customSubRow = document.createElement('div');
         customSubRow.style.display = 'none';
         customSubRow.style.marginBottom = '10px';
@@ -1292,7 +1327,6 @@ async function showAuditMode() {
           }
         });
         
-        // Done button
         const doneBtn = document.createElement('button');
         doneBtn.textContent = '✓ Done';
         doneBtn.style.width = '100%';
@@ -1326,23 +1360,19 @@ async function showAuditMode() {
             return;
           }
           
-          // Save selection
           selections[name] = { feature, sub };
           
-          // Update UI
           headerText.textContent = `✓ ${name}`;
           statusBadge.textContent = `${feature}:${sub}`;
           statusBadge.style.background = '#4CAF50';
           content.style.display = 'none';
           
-          // Update apply button count
           updateApplyButton();
         };
         
         content.appendChild(doneBtn);
         container.appendChild(content);
         
-        // Toggle accordion
         header.onclick = () => {
           const isOpen = content.style.display === 'block';
           document.querySelectorAll('.audit-content').forEach(c => c.style.display = 'none');
@@ -1355,7 +1385,6 @@ async function showAuditMode() {
         functionOutput.appendChild(container);
       });
       
-      // Apply All button
       const applyBtn = document.createElement('button');
       applyBtn.id = 'applyAllMarkersBtn';
       applyBtn.textContent = 'Apply All Markers (0 ready)';
@@ -1408,7 +1437,6 @@ async function showAuditMode() {
       functionOutput.appendChild(applyBtn);
     }
     
-    // Display marked snippets
     if (results.marked.length > 0) {
       const markedHeader = document.createElement('div');
       markedHeader.textContent = `MARKED (${results.marked.length} labeled):`;
@@ -1430,7 +1458,6 @@ async function showAuditMode() {
       });
     }
     
-    // Progress
     const total = results.marked.length + results.unmarked.length;
     const progress = document.createElement('div');
     progress.textContent = `Progress: ${results.marked.length} of ${total} labeled`;
