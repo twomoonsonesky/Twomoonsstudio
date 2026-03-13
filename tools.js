@@ -111,6 +111,9 @@
     let initialDistance = 0;
 
     function enterEditMode() {
+  // EDIT_MENU_START
+  // EDIT_MENU:handler_START
+
       isEditMode = true;
 
       grid?.classList.remove('hidden');
@@ -118,15 +121,24 @@
 
       updateLayoutInfo();
       makeElementsEditable();
+
+  // EDIT_MENU:handler_END
+  // EDIT_MENU_END
     }
 
     function exitEditMode() {
+  // EDIT_MENU_START
+  // EDIT_MENU:handler_START
+
       isEditMode = false;
 
       grid?.classList.add('hidden');
       layoutInfo?.classList.add('hidden');
 
       removeEditListeners();
+
+  // EDIT_MENU:handler_END
+  // EDIT_MENU_END
     }
 
     function toggle() {
@@ -469,6 +481,9 @@
     }
 
     async function getFileContent(token, owner, repo, path, refName) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:loader_START
+
       const url = `https://api.github.com/repos/${owner}/${repo}/contents/${ghPath(path)}?ref=${encodeURIComponent(refName)}`;
       const data = await ghRequest(token, url);
       if (!data.content) throw new Error('GitHub did not return file content. Is filePath correct?');
@@ -478,6 +493,9 @@
       const decoded = new TextDecoder().decode(bytes);
       
       return { decoded, sha: data.sha };
+
+  // TAILOR_ENGINE:loader_END
+  // TAILOR_ENGINE_END
     }
 
     function normalizeNewlines(s) {
@@ -613,6 +631,9 @@
     }
 
     async function getFileText(file) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:loader_START
+
       const token = requireToken();
       const { decoded } = await getFileContent(
         token,
@@ -622,6 +643,9 @@
         GH_DEFAULTS.branch
       );
       return decoded;
+
+  // TAILOR_ENGINE:loader_END
+  // TAILOR_ENGINE_END
     }
 
     async function getFunctionNames(file) {
@@ -648,6 +672,10 @@
     }
 
     function extractFunctionSource(text, funcName) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:parser_START
+
+      const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\function extractFunctionSource(text, funcName) {
       const name = String(funcName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
       const patterns = [
@@ -699,6 +727,60 @@
       }
 
       return null;
+    }');
+
+      const patterns = [
+        new RegExp(`(?:async\\s+)?function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+        new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?\\([^)]*\\)\\s*=>\\s*\\{`, 'm'),
+        new RegExp(`(?:const|let|var)\\s+${name}\\s*=\\s*(?:async\\s*)?function\\s*\\([^)]*\\)\\s*\\{`, 'm'),
+      ];
+
+      let match = null;
+      for (const rx of patterns) {
+        match = text.match(rx);
+        if (match) break;
+      }
+      if (!match) return null;
+
+      const startIndex = match.index;
+      const braceIndex = text.indexOf('{', startIndex);
+      if (braceIndex < 0) return null;
+
+      let depth = 0;
+      let inS = false, inD = false, inT = false;
+      let inLine = false, inBlock = false;
+      let esc = false;
+
+      for (let i = braceIndex; i < text.length; i++) {
+        const c = text[i];
+        const n = text[i + 1];
+
+        if (inLine) { if (c === '\n') inLine = false; continue; }
+        if (inBlock) { if (c === '*' && n === '/') { inBlock = false; i++; } continue; }
+
+        if (!inS && !inD && !inT) {
+          if (c === '/' && n === '/') { inLine = true; i++; continue; }
+          if (c === '/' && n === '*') { inBlock = true; i++; continue; }
+        }
+
+        if (inS) { if (!esc && c === "'") inS = false; esc = (!esc && c === '\\'); continue; }
+        if (inD) { if (!esc && c === '"') inD = false; esc = (!esc && c === '\\'); continue; }
+        if (inT) { if (!esc && c === '`') inT = false; esc = (!esc && c === '\\'); continue; }
+
+        if (c === "'") { inS = true; esc = false; continue; }
+        if (c === '"') { inD = true; esc = false; continue; }
+        if (c === '`') { inT = true; esc = false; continue; }
+
+        if (c === '{') depth++;
+        if (c === '}') depth--;
+
+        if (depth === 0) return text.slice(startIndex, i + 1);
+      }
+
+      return null;
+
+  // TAILOR_ENGINE:parser_END
+  // TAILOR_ENGINE_END
     }
 
     function getSectionNames(text) {
@@ -719,6 +801,9 @@
     }
 
     function extractSectionContent(text, sectionName) {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:parser_START
+
       const htmlStart = `<!-- ${sectionName}_START -->`;
       const htmlEnd = `<!-- ${sectionName}_END -->`;
       
@@ -740,6 +825,9 @@
       }
       
       return null;
+
+  // TAILOR_ENGINE:parser_END
+  // TAILOR_ENGINE_END
     }
 
     async function renderDebugContext(targetId) {
@@ -1537,6 +1625,9 @@ function checkForFeatureMarkers(codeBlock) {
 }
 
 function extractFeatureName(codeBlock) {
+  // AUDIT_SYSTEM_START
+  // AUDIT_SYSTEM:parser_START
+
   // Extract feature name from lines 2-5 only
   const lines = codeBlock.split('\n');
   const markerLines = lines.slice(1, 5).join('\n');
@@ -1555,6 +1646,9 @@ function extractFeatureName(codeBlock) {
   }
   
   return null;
+
+  // AUDIT_SYSTEM:parser_END
+  // AUDIT_SYSTEM_END
 }
 
 function validateFeatureMarkers(code) {
