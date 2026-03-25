@@ -1770,6 +1770,9 @@ async function executeQuickPaste(parsed) {
   
   // Validate markers BEFORE processing
   if (!validateFeatureMarkers(parsed.code)) {
+    // SAFETY: Clear any stale patch JSON from previous attempts
+    if (patchArea) patchArea.value = '';
+    
     throw new Error(`Missing feature markers!\n\nYour code must have markers on lines 2-5:\n\n// FEATURE_NAME_START\n// FEATURE_NAME:subcomponent_START\n\nAdd markers and try again.`);
   }
   
