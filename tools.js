@@ -2387,3 +2387,12 @@ async function executeQuickPaste(parsed) {
 
 // Quick Paste Mode test - successfully added!
 // This proves the Quick Paste system works!
+
+// TAILOR_ENGINE_START
+// TAILOR_ENGINE:backup_test_START
+
+// Backup system test - March 26, 2026
+// This tests if backups are created successfully!
+
+// TAILOR_ENGINE:backup_test_END
+// TAILOR_ENGINE_END
