@@ -135,48 +135,13 @@
       <h2>[TAILOR]</h2>
       <button id="tailorCloseBtn" class="tailor-close">X</button>
     </div>
-
-    <div class="tailor-content">
-      <div class="tailor-section">
-        <h3>GitHub Token (fine-grained PAT)</h3>
-        <input type="password" id="tailorToken" placeholder="Paste token here">
-        <div class="tailor-button-row">
-          <button id="tailorSaveTokenBtn">Save Token</button>
-          <button id="tailorClearTokenBtn">Clear Token</button>
-        </div>
-        <div id="tailorTokenStatus">Token saved on this iPad</div>
-      </div>
-
-      <div class="tailor-section">
-        <h3>Patch JSON</h3>
-        <textarea id="tailorPatch" placeholder='Example:
-{
-  "owner": "twomoonsonesky",
-  "repo": "Twomoonsstudio",
-  "branch": "main",
-  "filePath": "app.js",
-  "find": "setInterval(checkTimeAndSetMode, 3600000);",
-  "replace": "setInterval(checkTimeAndSetMode, 60 * 1000);",
-  "commitMessage": "Tailor patch: update interval"
-}'></textarea>
-        <div class="tailor-button-row">
-          <button id="tailorDryRunBtn">Dry Run</button>
-          <button id="tailorCommitBtn">Commit Patch</button>
-        </div>
-        <div id="tailorResult"></div>
-      </div>
-
-      <div class="tailor-section">
-        <h3>[FUNCTION FINDER]</h3>
-        <label>Choose file</label>
-        <select id="tailor-file"></select>
-        <button id="tailor-go">Functions</button>
-        <div id="tailor-output"></div>
-      </div> 
+    <div class="tailor-content" id="tailorContent">
+      <!-- Built by JavaScript -->
     </div>
   </div>
 </div>
 <!-- TAILOR_OVERLAY_END -->
+
 
 	<!-- SCRIPTS_START -->
 	<!-- IMPORTANT: tools.js first, then app.js -->
