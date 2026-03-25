@@ -613,6 +613,20 @@ try {
         setResult('Committing patch...');
         const token = requireToken();
         const patch = parsePatch();
+    
+    // Create backup before committing
+    try {
+      const backupKey = `TAILOR_BACKUP_${patch.filePath}`;
+      const backupData = {
+        content: patch.find,
+        timestamp: Date.now(),
+        filename: patch.filePath
+      };
+      localStorage.setItem(backupKey, JSON.stringify(backupData));
+    } catch (backupErr) {
+      console.warn('Could not save backup:', backupErr);
+    }
+
 
         const before = await getFileContent(token, patch.owner, patch.repo, patch.filePath, patch.branch);
         const { updated, count } = applyReplace(before.decoded, patch.find, patch.replace);
