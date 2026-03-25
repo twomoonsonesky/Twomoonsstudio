@@ -1064,6 +1064,127 @@ ${results.jsReferences.join('\n') || 'None found'}
   // TAILOR_ENGINE_END
 }
 
+// TAILOR_ENGINE_START
+// TAILOR_ENGINE:edit_options_START
+
+function showEditOptions() {
+  functionOutput.innerHTML = '';
+  
+  const backBtn = document.createElement('button');
+  backBtn.textContent = '← Back';
+  backBtn.style.marginBottom = '10px';
+  backBtn.style.padding = '8px 16px';
+  backBtn.style.border = 'none';
+  backBtn.style.borderRadius = '6px';
+  backBtn.style.background = 'rgba(0,0,0,0.1)';
+  backBtn.style.cursor = 'pointer';
+  backBtn.onclick = renderModeSelector;
+  functionOutput.appendChild(backBtn);
+  
+  const title = document.createElement('div');
+  title.textContent = 'Choose file to edit:';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  functionOutput.appendChild(title);
+  
+  const fileSelect = document.getElementById('tailor-file');
+  const file = fileSelect?.value || 'app.js';
+  
+  const fileDisplay = document.createElement('select');
+  fileDisplay.style.width = '100%';
+  fileDisplay.style.padding = '12px';
+  fileDisplay.style.borderRadius = '8px';
+  fileDisplay.style.border = '2px solid rgba(0,0,0,0.1)';
+  fileDisplay.style.marginBottom = '20px';
+  fileDisplay.style.fontSize = '14px';
+  
+  const files = ['app.js', 'tools.js', 'index.html', 'styles.css', 'firebase-config.js'];
+  files.forEach(f => {
+    const option = document.createElement('option');
+    option.value = f;
+    option.textContent = f;
+    if (f === file) option.selected = true;
+    fileDisplay.appendChild(option);
+  });
+  
+  fileDisplay.onchange = (e) => {
+    if (fileSelect) fileSelect.value = e.target.value;
+    showEditModes(e.target.value);
+  };
+  
+  functionOutput.appendChild(fileDisplay);
+  
+  showEditModes(file);
+}
+
+function showEditModes(file) {
+  const existing = document.getElementById('editModesContainer');
+  if (existing) existing.remove();
+  
+  const container = document.createElement('div');
+  container.id = 'editModesContainer';
+  
+  const title = document.createElement('div');
+  title.textContent = 'Choose edit mode:';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '12px';
+  container.appendChild(title);
+  
+  const modes = [
+    { id: 'replace', label: '🔄 Replace', desc: 'Update existing code' },
+    { id: 'insertAfter', label: '➕ Insert After', desc: 'Add code after selection' },
+    { id: 'append', label: '📎 Append', desc: 'Add to end of file' },
+    { id: 'viewFull', label: '📄 View/Edit Full File', desc: 'Edit entire file' }
+  ];
+  
+  modes.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.style.width = '100%';
+    btn.style.padding = '16px';
+    btn.style.marginBottom = '10px';
+    btn.style.border = '2px solid #e0e0e0';
+    btn.style.borderRadius = '8px';
+    btn.style.background = 'white';
+    btn.style.cursor = 'pointer';
+    btn.style.textAlign = 'left';
+    btn.style.transition = 'all 0.2s ease';
+    
+    const label = document.createElement('div');
+    label.textContent = mode.label;
+    label.style.fontSize = '14px';
+    label.style.fontWeight = 'bold';
+    label.style.marginBottom = '4px';
+    btn.appendChild(label);
+    
+    const desc = document.createElement('div');
+    desc.textContent = mode.desc;
+    desc.style.fontSize = '12px';
+    desc.style.color = '#666';
+    btn.appendChild(desc);
+    
+    btn.onmouseover = () => {
+      btn.style.borderColor = '#4ECDC4';
+      btn.style.background = 'rgba(78, 205, 196, 0.05)';
+    };
+    btn.onmouseout = () => {
+      btn.style.borderColor = '#e0e0e0';
+      btn.style.background = 'white';
+    };
+    
+    btn.onclick = () => {
+      currentMode = mode.id;
+      startEditMode();
+    };
+    
+    container.appendChild(btn);
+  });
+  
+  functionOutput.appendChild(container);
+}
+
+// TAILOR_ENGINE:edit_options_END
+// TAILOR_ENGINE_END
+
   function showQuickPasteInput() {
   // QUICK_PASTE_SYSTEM_START
   // QUICK_PASTE_SYSTEM:input_ui_START
