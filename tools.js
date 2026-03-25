@@ -935,65 +935,133 @@ ${results.jsReferences.join('\n') || 'None found'}
     }
 
     function renderModeSelector() {
+  // TAILOR_ENGINE_START
+  // TAILOR_ENGINE:mode_selector_START
+  
   functionOutput.innerHTML = '';
   
-  const file = fileSelect?.value || 'app.js';
+  // Token status at top (minimal)
+  const tokenStatus = document.createElement('div');
+  tokenStatus.style.padding = '10px';
+  tokenStatus.style.background = 'rgba(76, 175, 80, 0.1)';
+  tokenStatus.style.borderRadius = '8px';
+  tokenStatus.style.marginBottom = '20px';
+  tokenStatus.style.display = 'flex';
+  tokenStatus.style.justifyContent = 'space-between';
+  tokenStatus.style.alignItems = 'center';
   
+  const statusText = document.createElement('span');
+  statusText.textContent = '✓ Token Saved';
+  statusText.style.fontSize = '13px';
+  statusText.style.color = '#4CAF50';
+  statusText.style.fontWeight = 'bold';
+  tokenStatus.appendChild(statusText);
+  
+  const settingsBtn = document.createElement('button');
+  settingsBtn.textContent = '⚙️';
+  settingsBtn.style.padding = '6px 12px';
+  settingsBtn.style.border = 'none';
+  settingsBtn.style.borderRadius = '6px';
+  settingsBtn.style.background = 'rgba(0,0,0,0.05)';
+  settingsBtn.style.cursor = 'pointer';
+  settingsBtn.style.fontSize = '16px';
+  settingsBtn.onclick = () => {
+    // Scroll to token section
+    document.getElementById('tailorToken')?.scrollIntoView({ behavior: 'smooth' });
+  };
+  tokenStatus.appendChild(settingsBtn);
+  
+  functionOutput.appendChild(tokenStatus);
+  
+  // Main title
   const title = document.createElement('div');
-  title.textContent = 'Choose Edit Mode:';
+  title.textContent = 'What do you want to do?';
   title.style.fontWeight = 'bold';
-  title.style.marginBottom = '12px';
+  title.style.fontSize = '16px';
+  title.style.marginBottom = '16px';
+  title.style.textAlign = 'center';
   functionOutput.appendChild(title);
-
-  const modes = [
-    { id: 'replace', label: 'Replace Function', desc: 'Update existing function (JS files only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-    { id: 'insertAfter', label: 'Insert After Function', desc: 'Add new function after selected (JS only)', showFor: ['app.js', 'tools.js', 'firebase-config.js'] },
-    { id: 'append', label: 'Append to End', desc: 'Add new code at end of file', showFor: 'all' },
-    { id: 'editSection', label: 'Edit Section', desc: 'Edit marked sections (HTML/CSS)', showFor: ['index.html', 'styles.css'] },
-    { id: 'viewFull', label: 'View/Edit Full File', desc: 'Edit entire file content', showFor: 'all' },
-    { id: 'debugContext', label: '[DEBUG] Code Explorer', desc: 'Find all code related to an element', showFor: 'all' },
-    { id: 'quickPaste', label: '[QUICK] Paste Command', desc: 'Paste pre-formatted code block with headers', showFor: 'all' },
-    { id: 'auditCode', label: '[AUDIT] Code Quality', desc: 'Find unmarked functions and sections', showFor: 'all' }
-  ];
-
-  modes.forEach(mode => {
-    if (mode.showFor !== 'all' && !mode.showFor.includes(file)) {
-      return;
+  
+  // Main action buttons
+  const actions = [
+    { 
+      id: 'quickPaste', 
+      label: '⚡ Quick Paste', 
+      desc: 'Paste formatted code blocks',
+      color: '#FF6B6B'
+    },
+    { 
+      id: 'edit', 
+      label: '✏️ Edit', 
+      desc: 'Modify functions or sections',
+      color: '#4ECDC4'
+    },
+    { 
+      id: 'debug', 
+      label: '🔍 Debug', 
+      desc: 'Find code for an element',
+      color: '#95E1D3'
+    },
+    { 
+      id: 'audit', 
+      label: '📊 Audit', 
+      desc: 'Check code quality',
+      color: '#F38181'
     }
-    
+  ];
+  
+  actions.forEach(action => {
     const btn = document.createElement('button');
-    btn.textContent = mode.label;
     btn.style.width = '100%';
-    btn.style.padding = '12px';
-    btn.style.marginBottom = '8px';
-    btn.style.textAlign = 'left';
+    btn.style.padding = '20px';
+    btn.style.marginBottom = '12px';
+    btn.style.border = 'none';
+    btn.style.borderRadius = '12px';
+    btn.style.background = action.color;
+    btn.style.color = 'white';
     btn.style.cursor = 'pointer';
-    btn.style.border = '2px solid #ccc';
-    btn.style.borderRadius = '6px';
-    btn.style.background = currentMode === mode.id ? '#e3f2fd' : 'white';
-
+    btn.style.transition = 'all 0.2s ease';
+    btn.style.textAlign = 'left';
+    
+    const label = document.createElement('div');
+    label.textContent = action.label;
+    label.style.fontSize = '16px';
+    label.style.fontWeight = 'bold';
+    label.style.marginBottom = '4px';
+    btn.appendChild(label);
+    
     const desc = document.createElement('div');
-    desc.textContent = mode.desc;
-    desc.style.fontSize = '0.85em';
-    desc.style.color = '#666';
-    desc.style.marginTop = '4px';
+    desc.textContent = action.desc;
+    desc.style.fontSize = '12px';
+    desc.style.opacity = '0.9';
     btn.appendChild(desc);
-
+    
+    btn.onmouseover = () => {
+      btn.style.transform = 'scale(1.02)';
+      btn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+    };
+    btn.onmouseout = () => {
+      btn.style.transform = 'scale(1)';
+      btn.style.boxShadow = 'none';
+    };
+    
     btn.onclick = () => {
-      currentMode = mode.id;
-      if (mode.id === 'debugContext') {
-        showDebugContextInput();
-      } else if (mode.id === 'quickPaste') {
+      if (action.id === 'quickPaste') {
         showQuickPasteInput();
-      } else if (mode.id === 'auditCode') {
+      } else if (action.id === 'edit') {
+        showEditOptions();
+      } else if (action.id === 'debug') {
+        showDebugContextInput();
+      } else if (action.id === 'audit') {
         showAuditMode();
-      } else {
-        startEditMode();
       }
     };
-
+    
     functionOutput.appendChild(btn);
   });
+  
+  // TAILOR_ENGINE:mode_selector_END
+  // TAILOR_ENGINE_END
 }
 
   function showQuickPasteInput() {
