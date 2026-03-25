@@ -466,6 +466,26 @@ try {
 // TAILOR_ENGINE:backup_system_END
 // TAILOR_ENGINE_END
 
+// TAILOR_ENGINE_START
+// TAILOR_ENGINE:backup_system_START
+
+// CREATE BACKUP BEFORE COMMITTING
+try {
+  const backupKey = `TAILOR_BACKUP_${patch.filePath}`;
+  const backupData = {
+    content: patch.find,
+    timestamp: Date.now(),
+    filename: patch.filePath
+  };
+  localStorage.setItem(backupKey, JSON.stringify(backupData));
+  console.log('✅ Backup saved:', backupKey);
+} catch (backupErr) {
+  console.warn('⚠️ Could not save backup:', backupErr);
+}
+
+// TAILOR_ENGINE:backup_system_END
+// TAILOR_ENGINE_END
+
     function ghPath(path) {
       return String(path).split('/').map(encodeURIComponent).join('/');
     }
