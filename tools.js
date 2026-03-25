@@ -1555,20 +1555,11 @@ function validateFeatureMarkers(code) {
   // AUDIT_SYSTEM_START
   // AUDIT_SYSTEM:validator_START
   
-  // Check if code has feature markers in lines 2-5
+  // Check if code has feature markers in first 5 lines (not 2-5!)
   const lines = code.split('\n');
   
-  // Skip empty lines at start
-  let startIndex = 0;
-  for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim()) {
-      startIndex = i;
-      break;
-    }
-  }
-  
-  // Check lines 2-5 after first non-empty line
-  const markerLines = lines.slice(startIndex + 1, startIndex + 6).join('\n');
+  // Check lines 0-4 (first 5 lines) to catch markers at the very start
+  const markerLines = lines.slice(0, 5).join('\n');
   
   const patterns = [
     /\/\/\s*[A-Z_]+_START/,           // JS: // FEATURE_START
