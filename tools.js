@@ -950,10 +950,13 @@ ${results.jsReferences.join('\n') || 'None found'}
   tokenStatus.style.justifyContent = 'space-between';
   tokenStatus.style.alignItems = 'center';
   
+  const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
+  const savedToken = localStorage.getItem(STORAGE_KEY);
+  
   const statusText = document.createElement('span');
-  statusText.textContent = '✓ Token Saved';
+  statusText.textContent = savedToken ? '✓ Token Saved' : '⚠️ No Token';
   statusText.style.fontSize = '13px';
-  statusText.style.color = '#4CAF50';
+  statusText.style.color = savedToken ? '#4CAF50' : '#f44336';
   statusText.style.fontWeight = 'bold';
   tokenStatus.appendChild(statusText);
   
@@ -981,6 +984,13 @@ ${results.jsReferences.join('\n') || 'None found'}
   title.style.marginBottom = '16px';
   title.style.textAlign = 'center';
   functionOutput.appendChild(title);
+  
+  // 2x2 grid container
+  const grid = document.createElement('div');
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = '1fr 1fr';
+  grid.style.gap = '10px';
+  grid.style.marginBottom = '20px';
   
   // Main action buttons
   const actions = [
@@ -1013,15 +1023,14 @@ ${results.jsReferences.join('\n') || 'None found'}
   actions.forEach(action => {
     const btn = document.createElement('button');
     btn.style.width = '100%';
-    btn.style.padding = '20px';
-    btn.style.marginBottom = '12px';
+    btn.style.padding = '20px 10px';
     btn.style.border = 'none';
     btn.style.borderRadius = '12px';
     btn.style.background = action.color;
     btn.style.color = 'white';
     btn.style.cursor = 'pointer';
     btn.style.transition = 'all 0.2s ease';
-    btn.style.textAlign = 'left';
+    btn.style.textAlign = 'center';
     
     const label = document.createElement('div');
     label.textContent = action.label;
@@ -1032,7 +1041,7 @@ ${results.jsReferences.join('\n') || 'None found'}
     
     const desc = document.createElement('div');
     desc.textContent = action.desc;
-    desc.style.fontSize = '12px';
+    desc.style.fontSize = '11px';
     desc.style.opacity = '0.9';
     btn.appendChild(desc);
     
@@ -1047,18 +1056,36 @@ ${results.jsReferences.join('\n') || 'None found'}
     
     btn.onclick = () => {
       if (action.id === 'quickPaste') {
-        showQuickPasteInput();
+        if (typeof showQuickPasteInput === 'function') {
+          showQuickPasteInput();
+        } else {
+          alert('Quick Paste not available');
+        }
       } else if (action.id === 'edit') {
-        showEditOptions();
+        if (typeof showEditOptions === 'function') {
+          showEditOptions();
+        } else {
+          alert('Edit mode not available');
+        }
       } else if (action.id === 'debug') {
-        showDebugContextInput();
+        if (typeof showDebugContextInput === 'function') {
+          showDebugContextInput();
+        } else {
+          alert('Debug mode not available');
+        }
       } else if (action.id === 'audit') {
-        showAuditMode();
+        if (typeof showAuditMode === 'function') {
+          showAuditMode();
+        } else {
+          alert('Audit mode not available');
+        }
       }
     };
     
-    functionOutput.appendChild(btn);
+    grid.appendChild(btn);
   });
+  
+  functionOutput.appendChild(grid);
   
   // TAILOR_ENGINE:mode_selector_END
   // TAILOR_ENGINE_END
