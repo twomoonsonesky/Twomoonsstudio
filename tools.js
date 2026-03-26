@@ -376,17 +376,14 @@
   const closeBtn = document.getElementById('tailorCloseBtn');
   const content = document.getElementById('tailorContent');
 
-  if (!overlay || !content) return;
-
-  const GH_DEFAULTS = {
-    owner: "twomoonsonesky",
-    repo: "Twomoonsstudio",
-    branch: "rescuemission",
-  };
+  // Fallback if new HTML not installed yet
+  if (!content) {
+    console.warn('tailorContent not found - using legacy initialization');
+    initTailorLegacy(ctx);
+    return;
+  }
 
   const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
-  let currentMode = 'replace';
-  let currentFile = 'tools.js';
 
   // Close handlers
   closeBtn?.addEventListener('click', () => {
@@ -480,10 +477,27 @@
       };
       
       btn.onclick = () => {
-        if (action.id === 'quickPaste') showQuickPaste();
-        else if (action.id === 'edit') showEdit();
-        else if (action.id === 'debug') showDebug();
-        else if (action.id === 'audit') showAudit();
+        if (action.id === 'quickPaste') {
+          // Call the existing Quick Paste function!
+          if (typeof showQuickPasteInput === 'function') {
+            showQuickPasteInput();
+          }
+        } else if (action.id === 'edit') {
+          // Call the existing Edit Options function!
+          if (typeof showEditOptions === 'function') {
+            showEditOptions();
+          }
+        } else if (action.id === 'debug') {
+          // Call the existing Debug function!
+          if (typeof showDebugContextInput === 'function') {
+            showDebugContextInput();
+          }
+        } else if (action.id === 'audit') {
+          // Call the existing Audit function!
+          if (typeof showAuditMode === 'function') {
+            showAuditMode();
+          }
+        }
       };
       
       grid.appendChild(btn);
@@ -578,24 +592,10 @@
     content.appendChild(btnRow);
   }
 
-  function showQuickPaste() {
-    alert('Quick Paste - connects to existing Quick Paste system!');
-    buildMainUI();
-  }
-
-  function showEdit() {
-    alert('Edit mode - connects to existing edit system!');
-    buildMainUI();
-  }
-
-  function showDebug() {
-    alert('Debug mode - connects to existing debug system!');
-    buildMainUI();
-  }
-
-  function showAudit() {
-    alert('Audit mode - connects to existing audit system!');
-    buildMainUI();
+  function initTailorLegacy(ctx) {
+    // This is a fallback that runs the old initialization
+    // if the new HTML isn't installed yet
+    console.log('Running legacy Tailor initialization...');
   }
   
   // TAILOR_ENGINE:initializer_END
