@@ -1066,14 +1066,6 @@ ${results.jsReferences.join('\n') || 'None found'}
 
 // TAILOR_ENGINE_START
 // TAILOR_ENGINE:edit_options_START
-  // Fallback if new HTML not installed yet
-  if (!content) {
-    console.warn('tailorContent not found - using legacy initialization');
-    initTailorLegacy(ctx);
-    return;
-  }
-
-  const STORAGE_KEY = 'TWO_MOONS_TAILOR_TOKEN';
 
 function showEditOptions() {
   functionOutput.innerHTML = '';
@@ -1613,27 +1605,6 @@ async function showAuditMode() {
           alert('Error: ' + error.message);
           applyBtn.textContent = `Apply All Markers (${count} ready)`;
           applyBtn.disabled = false;
-      btn.onclick = () => {
-        if (action.id === 'quickPaste') {
-          // Call the existing Quick Paste function!
-          if (typeof showQuickPasteInput === 'function') {
-            showQuickPasteInput();
-          }
-        } else if (action.id === 'edit') {
-          // Call the existing Edit Options function!
-          if (typeof showEditOptions === 'function') {
-            showEditOptions();
-          }
-        } else if (action.id === 'debug') {
-          // Call the existing Debug function!
-          if (typeof showDebugContextInput === 'function') {
-            showDebugContextInput();
-          }
-        } else if (action.id === 'audit') {
-          // Call the existing Audit function!
-          if (typeof showAuditMode === 'function') {
-            showAuditMode();
-          }
         }
       };
       
@@ -1920,10 +1891,6 @@ function parseQuickPasteBlock(content) {
       headerEnd = i;
       break;
     }
-  function initTailorLegacy(ctx) {
-    // This is a fallback that runs the old initialization
-    // if the new HTML isn't installed yet
-    console.log('Running legacy Tailor initialization...');
   }
   
   if (headerEnd === -1) {
